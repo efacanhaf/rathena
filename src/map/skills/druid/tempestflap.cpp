@@ -20,7 +20,7 @@ void SkillTempestFlap::splashSearch(block_list* src, block_list* target, uint16 
 void SkillTempestFlap::calculateSkillRatio(const Damage* wd, const block_list* src, const block_list* target, uint16 skill_lv, int32& skillratio, int32 mflag) const {
 	const status_data* sstatus = status_get_status_data(*src);
 
-	skillratio += -100 + 1250 * skill_lv;
+	skillratio += -100 + 1400 * skill_lv;
 	skillratio += sstatus->con * 10;
 
 	RE_LVL_DMOD(100);

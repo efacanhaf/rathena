@@ -55,7 +55,7 @@ void SkillPinionShot::splashSearch(block_list* src, block_list* target, uint16 s
 void SkillPinionShot::calculateSkillRatio(const Damage* wd, const block_list* src, const block_list* target, uint16 skill_lv, int32& skillratio, int32 mflag) const {
 	const status_data* sstatus = status_get_status_data(*src);
 
-	skillratio += -100 + 2450 * skill_lv;
+	skillratio += -100 + 2600 * skill_lv;
 	skillratio += sstatus->con * 5;
 
 	RE_LVL_DMOD(100);

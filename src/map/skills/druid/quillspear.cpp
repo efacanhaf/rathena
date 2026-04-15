@@ -46,7 +46,7 @@ void SkillQuillSpear::castendDamageId(block_list* src, block_list* target, uint1
 void SkillQuillSpear::calculateSkillRatio(const Damage* wd, const block_list* src, const block_list* target, uint16 skill_lv, int32& base_skillratio, int32 mflag) const {
 	const status_data* sstatus = status_get_status_data(*src);
 
-	int32 skillratio = 2050 * skill_lv;
+	int32 skillratio = 2100 * skill_lv;
 	skillratio += sstatus->con * 5; // TODO - unknown scaling [munkrej]
 	RE_LVL_DMOD(100);
 	base_skillratio += -100 + skillratio;
@@ -91,7 +91,7 @@ void SkillQuillSpearS::castendDamageId(block_list* src, block_list* target, uint
 void SkillQuillSpearS::calculateSkillRatio(const Damage* wd, const block_list* src, const block_list* target, uint16 skill_lv, int32& base_skillratio, int32 mflag) const {
 	const status_data* sstatus = status_get_status_data(*src);
 
-	int32 skillratio = 2050 * skill_lv;
+	int32 skillratio = 2100 * skill_lv;
 	skillratio += sstatus->con * 5; // TODO - unknown scaling [munkrej]
 	RE_LVL_DMOD(100);
 	base_skillratio += -100 + skillratio;

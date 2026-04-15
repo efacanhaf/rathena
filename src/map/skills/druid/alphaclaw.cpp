@@ -54,7 +54,7 @@ void SkillAlphaClaw::calculateSkillRatio(const Damage* wd, const block_list* src
 	const status_change* sc = status_get_sc(src);
 	const status_data* sstatus = status_get_status_data(*src);
 
-	skillratio += -100 + 2200 + 1400 * (skill_lv - 1);
+	skillratio += -100 + 2600 + 1600 * (skill_lv - 1);
 
 	if (sc != nullptr && (sc->hasSCE(SC_ALPHA_PHASE) || sc->hasSCE(SC_INSANE) || sc->hasSCE(SC_INSANE2) || sc->hasSCE(SC_INSANE3))) {
 		skillratio += 800;
