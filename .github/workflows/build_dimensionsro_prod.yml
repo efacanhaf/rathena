@@ -41,7 +41,6 @@ jobs:
       - name: Verify binaries
         run: |
           ls -la login-server char-server map-server web-server
-          file login-server char-server map-server web-server
           ldd login-server
 
       - name: Tarball binaries
