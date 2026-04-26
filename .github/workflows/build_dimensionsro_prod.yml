@@ -1,0 +1,56 @@
+name: Build for Oracle Linux 9 (DimensionsRO prod)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'src/**'
+      - '3rdparty/**'
+      - '**/CMakeLists.txt'
+      - '.github/workflows/build_dimensionsro_prod.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: oraclelinux:9
+      options: --user root
+    steps:
+      - name: Install build deps
+        run: |
+          dnf install -y --setopt=tsflags=nodocs \
+            gcc gcc-c++ cmake make git wget tar gzip \
+            zlib-devel pcre2-devel mariadb-connector-c-devel
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: CMake configure (Release)
+        run: |
+          mkdir -p build
+          cd build
+          cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release ..
+
+      - name: Build
+        run: |
+          cd build
+          make -j$(nproc)
+
+      - name: Verify binaries
+        run: |
+          ls -la login-server char-server map-server web-server
+          file login-server char-server map-server web-server
+          ldd login-server
+
+      - name: Tarball binaries
+        run: |
+          tar czf rathena-ol9-x86_64.tar.gz \
+            login-server char-server map-server web-server
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rathena-ol9-x86_64
+          path: rathena-ol9-x86_64.tar.gz
+          retention-days: 30
