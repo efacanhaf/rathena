@@ -3,6 +3,8 @@
 
 #include "pc.hpp"
 
+#include <custom/ep17_1.hpp>
+
 #include <cmath>
 #include <cstdlib>
 #include <map>
@@ -6443,6 +6445,13 @@ int32 pc_useitem(map_session_data *sd,int32 n)
 	if (item.nameid == 0 || item.amount <= 0)
 		return 0;
 
+#ifdef EP17_1_DISABLE_POST_ITEMS
+	if (ep17_1::is_post_ep17_1_item(static_cast<int32_t>(item.nameid))) {
+		clif_displaymessage(sd->fd, "[Ep 17.1] That item is locked on this server.");
+		return 0;
+	}
+#endif
+
 	if( !pc_isUseitem(sd,n) )
 		return 0;
 
@@ -6901,6 +6910,16 @@ enum e_setpos pc_setpos(map_session_data* sd, uint16 mapindex, int32 x, int32 y,
 
 	if ( sd->state.autotrade && (sd->vender_id || sd->buyer_id) ) // Player with autotrade just causes clif glitch! @ FIXME
 		return SETPOS_AUTOTRADE;
+
+#ifdef EP17_1_DISABLE_POST_MAPS
+	{
+		const char *target_name = mapindex_id2name(mapindex);
+		if (target_name && ep17_1::is_post_ep17_1_map(target_name)) {
+			clif_displaymessage(sd->fd, "[Ep 17.1] That map is locked on this server.");
+			return SETPOS_MAPINDEX;
+		}
+	}
+#endif
 
 	if( battle_config.revive_onwarp && pc_isdead(sd) ) { //Revive dead people before warping them
 		pc_setstand(sd, true);
@@ -10833,6 +10852,15 @@ bool pc_jobchange(map_session_data *sd,int32 job, char upper)
 	if( !job_db.exists( job ) ){
 		return false;
 	}
+
+#ifdef EP17_1_DISABLE_4TH_JOBS
+	if (ep17_1::is_post_ep17_1_job(job)) {
+		ShowWarning("pc_jobchange: blocked Ep 17.1 lock — job %d (char %d) is post-17.1.\n",
+		            job, sd->status.char_id);
+		clif_displaymessage(sd->fd, "[Ep 17.1] 4th-job classes are disabled on this server.");
+		return false;
+	}
+#endif
 
 	if( ( b_class&JOBL_FOURTH ) && !( sd->class_&JOBL_FOURTH ) ){
 		// Changing to 4th job
