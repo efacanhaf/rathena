@@ -181,6 +181,7 @@
     <ClCompile Include="merchantstore_controller.cpp" />
     <ClCompile Include="partybooking_controller.cpp" />
     <ClCompile Include="sqllock.cpp" />
+    <ClCompile Include="status_controller.cpp" />
     <ClCompile Include="userconfig_controller.cpp" />
     <ClCompile Include="webutils.cpp" />
     <ClCompile Include="web.cpp" />
@@ -193,6 +194,7 @@
     <ClInclude Include="merchantstore_controller.hpp" />
     <ClInclude Include="partybooking_controller.hpp" />
     <ClInclude Include="sqllock.hpp" />
+    <ClInclude Include="status_controller.hpp" />
     <ClInclude Include="userconfig_controller.hpp" />
     <ClInclude Include="webutils.hpp" />
     <ClInclude Include="web.hpp" />
