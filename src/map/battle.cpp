@@ -608,6 +608,13 @@ int64 battle_attr_fix(block_list *src, block_list *target, int64 damage,int32 at
 #else
 					damage += (int64)(damage * 50 / 100);
 #endif
+				// DimensionsRO: Fire Insignia resiste -25% de dano de fogo
+				if (tsc->getSCE(SC_FIRE_INSIGNIA))
+#ifdef RENEWAL
+					ratio -= 25;
+#else
+					damage = (int64)(damage * 75 / 100);
+#endif
 				if( tsc->getSCE(SC_WIDEWEB) ) {
 #ifdef RENEWAL
 					ratio += 100;
@@ -647,6 +654,13 @@ int64 battle_attr_fix(block_list *src, block_list *target, int64 damage,int32 at
 #else
 					damage += (int64)(damage * 50 / 100);
 #endif
+				// DimensionsRO: Wind Insignia resiste -25% de dano de vento
+				if (tsc->getSCE(SC_WIND_INSIGNIA))
+#ifdef RENEWAL
+					ratio -= 25;
+#else
+					damage = (int64)(damage * 75 / 100);
+#endif
 				if (tsc->getSCE(SC_CRYSTALIZE)) {
 					uint16 skill_id = battle_getcurrentskill(src);
 
@@ -665,6 +679,13 @@ int64 battle_attr_fix(block_list *src, block_list *target, int64 damage,int32 at
 #else
 					damage += (int64)(damage * 50 / 100);
 #endif
+				// DimensionsRO: Water Insignia resiste -25% de dano de água
+				if (tsc->getSCE(SC_WATER_INSIGNIA))
+#ifdef RENEWAL
+					ratio -= 25;
+#else
+					damage = (int64)(damage * 75 / 100);
+#endif
 				break;
 			case ELE_EARTH:
 				if (tsc->getSCE(SC_WIND_INSIGNIA))
@@ -672,6 +693,13 @@ int64 battle_attr_fix(block_list *src, block_list *target, int64 damage,int32 at
 					ratio += 50;
 #else
 					damage += (int64)(damage * 50 / 100);
+#endif
+				// DimensionsRO: Earth Insignia resiste -25% de dano de terra
+				if (tsc->getSCE(SC_EARTH_INSIGNIA))
+#ifdef RENEWAL
+					ratio -= 25;
+#else
+					damage = (int64)(damage * 75 / 100);
 #endif
 				status_change_end(target, SC_MAGNETICFIELD); //freed if received earth dmg
 				break;
@@ -4760,13 +4788,7 @@ static void battle_calc_defense_reduction( Damage* wd, block_list* src, block_li
 			def1 = (def1 * (100 + i)) / 100;
 		}
 
-		if( tsc->getSCE(SC_CAMOUFLAGE) ){
-			int16 i = 5 * tsc->getSCE(SC_CAMOUFLAGE)->val3; //5% per second
-
-			i = min(i,100); //cap it to 100 for 0 def min
-			def1 = (def1*(100-i))/100;
-			def2 = (def2*(100-i))/100;
-		}
+		// DimensionsRO: Camouflage não reduz mais DEF (era penalidade que crescia com val3)
 
 		if (tsc->getSCE(SC_GT_REVITALIZE))
 			def1 += tsc->getSCE(SC_GT_REVITALIZE)->val4;

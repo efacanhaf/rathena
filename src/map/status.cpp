@@ -7822,8 +7822,13 @@ static defType status_calc_def(block_list *bl, status_change *sc, int32 def)
 		def += 6 * sc->getSCE(SC_BANDING)->val1;
 	if( sc->getSCE(SC_ECHOSONG) )
 		def += sc->getSCE(SC_ECHOSONG)->val3;
-	if( sc->getSCE(SC_CAMOUFLAGE) )
-		def -= def * 5 * sc->getSCE(SC_CAMOUFLAGE)->val3 / 100;
+	// DimensionsRO: Moonlit Serenade / Rush Windmill agora adicionam DEF flat
+	if (sc->getSCE(SC_MOONLITSERENADE))
+		def += sc->getSCE(SC_MOONLITSERENADE)->val4;
+	if (sc->getSCE(SC_RUSHWINDMILL))
+		def += sc->getSCE(SC_RUSHWINDMILL)->val4;
+	// DimensionsRO: Camouflage não reduz mais DEF (era penalidade que crescia com val3)
+	// Bonus ofensivo (ATK/CRIT) em battle.cpp permanece
 	if( sc->getSCE(SC_SOLID_SKIN_OPTION) )
 		def += def * sc->getSCE(SC_SOLID_SKIN_OPTION)->val2 / 100;
 	if( sc->getSCE(SC_ROCK_CRUSHER) )
@@ -7906,8 +7911,7 @@ static int16 status_calc_def2(block_list *bl, status_change *sc, int32 def2)
 		def2 -= def2 * sc->getSCE(SC_PARALYSIS)->val2 / 100;
 	if(sc->getSCE(SC_EQC))
 		def2 -= def2 * sc->getSCE(SC_EQC)->val2 / 100;
-	if( sc->getSCE(SC_CAMOUFLAGE) )
-		def2 -= def2 * 5 * sc->getSCE(SC_CAMOUFLAGE)->val3 / 100;
+	// DimensionsRO: Camouflage não reduz mais DEF2 (mesma justificativa do calc_def acima)
 
 #ifdef RENEWAL
 	return (int16)cap_value(def2,SHRT_MIN,SHRT_MAX);
@@ -7966,6 +7970,11 @@ static defType status_calc_mdef(block_list *bl, status_change *sc, int32 mdef)
 		mdef -= 20 * sc->getSCE(SC_ODINS_POWER)->val1;
 	if (sc->getSCE(SC_SOULGOLEM))
 		mdef += sc->getSCE(SC_SOULGOLEM)->val3;
+	// DimensionsRO: Moonlit Serenade / Rush Windmill também adicionam MDEF flat
+	if (sc->getSCE(SC_MOONLITSERENADE))
+		mdef += sc->getSCE(SC_MOONLITSERENADE)->val4;
+	if (sc->getSCE(SC_RUSHWINDMILL))
+		mdef += sc->getSCE(SC_RUSHWINDMILL)->val4;
 	if (sc->getSCE(SC_STONE_WALL))
 		mdef += sc->getSCE(SC_STONE_WALL)->val3;
 	if (sc->getSCE(SC_CLIMAX_CRYIMP))
@@ -8218,7 +8227,7 @@ static uint16 status_calc_speed(block_list *bl, status_change *sc, int32 speed)
 	if( sc->getSCE(SC_STEELBODY) )
 		speed = 200;
 	if( sc->getSCE(SC_DEFENDER) )
-		speed = max(speed, 200);
+		speed = max(speed, 175); // DimensionsRO: penalidade de movimento reduzida (era 200)
 	if (sc->getSCE(SC_ARMOR))
 		speed = max(speed, 200);
 	if( sc->getSCE(SC_WALKSPEED) && sc->getSCE(SC_WALKSPEED)->val1 > 0 ) // ChangeSpeed
@@ -11321,7 +11330,7 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			if (!(flag&SCSTART_NOAVOID)) {
 				val2 = 5 + 15*val1; // Damage reduction
 				val3 = 0; // Unused, previously speed adjustment
-				val4 = 250 - 50*val1; // Aspd adjustment
+				val4 = 125 - 25*val1; // DimensionsRO: penalidade de aspd reduzida pela metade (era 250-50*val1)
 
 				if (sd) {
 					map_session_data *tsd;
@@ -11346,7 +11355,7 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			tick = INFINITE_TICK; // Duration sent to the client should be infinite
 			break;
 		case SC_PARRYING:
-		    val2 = 20 + val1*3; // Block Chance
+		    val2 = 30 + val1*5; // DimensionsRO: block chance buffada (era 20+3*val1, max 35% -> agora 55%)
 			break;
 
 		case SC_WINDWALK:
@@ -11853,7 +11862,7 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 				int8 chance = rnd()%100;
 
 				val2 = ((chance < 20) ? 4 : (chance < 50) ? 3 : 2); // Shield count
-				val3 = 1000; // Shield HP
+				val3 = 2500; // DimensionsRO: shield HP 1000 -> 2500 (escala melhor com gear endgame)
 				clif_millenniumshield( *bl, val2 );
 			}
  			break;
@@ -12061,9 +12070,10 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 		case SC_SYMPHONYOFLOVER:
 			val3 = 2 * val1 + val2 + (sd?sd->status.job_level:50) / 4; // MDEF Increase
 			break;
-		case SC_MOONLITSERENADE: // MATK Increase
+		case SC_MOONLITSERENADE: // MATK Increase + DimensionsRO: DEF/MDEF flat
 		case SC_RUSHWINDMILL: // ATK Increase
 			val3 = 4 + val1 * 3 + val2 + (sd?sd->status.job_level:50) / 5;
+			val4 = val1 * 10; // DimensionsRO: Moonlit/RushWindmill agora dão DEF/MDEF flat (10/lvl)
 			break;
 		case SC_ECHOSONG:
 			val3 = 6 * val1 + val2 + (sd?sd->status.job_level:50) / 4; // DEF Increase
@@ -12195,11 +12205,10 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			val3 = status->agi * val1 / 60; // ASPD increase: [(Target AGI x Skill Level) / 60] %
 			break;
 		case SC_GT_REVITALIZE:
-			// Take note there is no vit, aspd, speed increase as skill desc says. [malufett]
-			val2 = 2 * val1; // MaxHP: [(Skill Level * 2)]%
-			val3 = val1 * 30 + 50; // Natural HP recovery increase: [(Skill Level x 30) + 50] %
-			// The stat def is not shown in the status window and it is processed differently
-			val4 = val1 * 20; // STAT DEF increase
+			// DimensionsRO: scaling buffado (era 2*lv MaxHP / 30*lv+50 regen / 20*lv STAT DEF)
+			val2 = 4 * val1; // MaxHP: 4% por lvl (max 20%)
+			val3 = val1 * 40 + 100; // HP regen: 40% por lvl + 100% base
+			val4 = val1 * 30; // STAT DEF: 30 por lvl (max 150)
 			break;
 		case SC_PYROTECHNIC_OPTION:
 			val2 = 60; // Eatk Renewal (Atk2)

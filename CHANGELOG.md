@@ -108,6 +108,37 @@ conteúdo de 17.1. Aplicado em `src/map/battle.cpp`, `src/map/status.cpp` e
 - **SC__SHADOWFORM**: duração +30s em todos lvls (30-70s → 60-100s).
 - **MI_RUSH_WINDMILL**: duração 3min → 4min.
 
+**Wave 2 — defensivas avançadas:**
+
+- **LK_PARRYING**: block chance scaling 20+3/lvl → 30+5/lvl (lvl 5: 35% → 55%).
+- **CR_DEFENDER**: penalidade de aspd reduzida pela metade
+  (val4 250-50/lvl → 125-25/lvl). Penalidade de movimento aliviada
+  (`max(speed,200)` → `max(speed,175)`). Damage reduction (vs ranged weapon)
+  inalterada (5+15/lvl, max 80%).
+- **RK_MILLENNIUMSHIELD**: HP por shield 1000 → 2500. Escala melhor com
+  conteúdo endgame onde MVPs batem >1k por hit.
+- **SO_FIRE/WATER/WIND/EARTH_INSIGNIA**: cada insígnia agora dá -25% de
+  resistência ao dano do elemento correspondente (somado ao bonus já existente
+  em battle.cpp para dano de elemento oposto).
+- **SR_GENTLETOUCH_REVITALIZE**: scaling buffado em todos os val:
+  - MaxHP %: 2/lvl → 4/lvl (max 10% → 20%)
+  - HP regen: 30/lvl+50 → 40/lvl+100 (lvl 5: 200% → 300%)
+  - STAT DEF: 20/lvl → 30/lvl (max 100 → 150)
+  - Duração: 240s → 360s (4 → 6 min)
+- **GN_MANDRAGORA**: rate base 25+10/lvl → 35+12/lvl (max ~95% antes de
+  mitigação por VIT/LUK). Duração 10-30s → 15-35s. Skill agora viável pra
+  controle de cast em mobs/MVPs com mais consistência.
+- **RA_CAMOUFLAGE**: removida a penalidade de DEF/DEF2 que crescia 5%/segundo
+  (`status.cpp:7825-7826` e `:7909-7910`). Removido o aumento de 5%/seg de
+  dano ranged recebido (`battle.cpp:4763-4769`). Bonus ofensivos (ATK +30/seg
+  até 300, CRIT +100/seg até 1000) preservados — Camouflage agora é puro
+  buff de prep.
+- **NC_SHAPESHIFT**: duração 5min → 10min. Reduz o overhead de re-cast em
+  Mado long-runs.
+- **WA_MOONLIT_SERENADE / MI_RUSH_WINDMILL**: agora adicionam DEF/MDEF flat
+  (10 por skill level, em ambos os lados). Antes só ATK/MATK; agora também
+  endurecem a party.
+
 ### Server-Side Tuning
 
 - **Input lag tuning Phase 1 + 2** (`conf/battle/battle.conf`,

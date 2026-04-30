@@ -16,7 +16,8 @@ void SkillHowlingOfMandragora::castendNoDamageId(block_list *src, block_list *ta
 		status_change *tsc = status_get_sc(target);
 		status_data* tstatus = status_get_status_data(*target);
 
-		int32 rate = 25 + (10 * skill_lv) - (tstatus->vit + tstatus->luk) / 5;
+		// DimensionsRO: rate base 25+10*lv -> 35+12*lv (max ~95% antes de VIT/LUK)
+		int32 rate = 35 + (12 * skill_lv) - (tstatus->vit + tstatus->luk) / 5;
 
 		if (rate < 10)
 			rate = 10;
