@@ -45,6 +45,16 @@ Changes accumulated on `develop` since last `main` release. When merging
   - `AB_ADORAMUS` -15% — differentiates from buffed Magnus (Phase 3)
   All PvE-only (vs_players=0).
 
+### Documented (scaffolding, no behavior change)
+
+- **Phase 5.3 — Mob HP override scaffold** (`db/import-tmpl/mob_db.yml`):
+  Placeholder file with documented workflow for tuning Ep 17.1 instance
+  mob HP/DEF post-playtest. Pre-populated with reference IDs (FACEWORM,
+  TIMEHOLDER, HEART_HUNTER_N) but no actual overrides applied. Reason:
+  Phase 3 buffs + Phase 4 caps + mid-rate baseline may already address
+  the gear-vs-content gap; blanket -15% HP could over-correct. To
+  activate: uncomment specific mob blocks based on player feedback.
+
 ### Draft (not yet enabled)
 
 - **Phase 5.2 — Adventurer Starter Kit NPC** (`npc/custom/dro_starter_kit.txt`):
