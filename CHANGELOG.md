@@ -38,6 +38,15 @@ Changes accumulated on `develop` since last `main` release. When merging
 - **Server-side input lag tuning** (phase 2): adjusted `min_skill_delay_limit`,
   `default_walk_delay`, etc. for snappier feel.
 
+### Draft (not yet enabled)
+
+- **Phase 5.2 — Adventurer Starter Kit NPC** (`npc/custom/dro_starter_kit.txt`):
+  vendor at `prontera 156,200` selling baseline 3rd-class kit (class-specific
+  +9 weapon + Diabolus armor set +7 + 2× Brisingamen) for 500k zeny, once
+  per character. **Status: DRAFT** — item IDs are placeholders. Per-class
+  weapon mapping in `.dro-build/dro-starter-kit-loadouts.md` pending review.
+  NOT enabled in `scripts_custom.conf` until reviewed.
+
 ### Fixed
 
 - _(none yet on this Unreleased)_
