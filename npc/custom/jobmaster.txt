@@ -503,8 +503,8 @@ OnInit:
 	.NPCName$ = "[Job Master]";
 	
 	// Settings
-	.FourthClass = true;				// Enable fourth classes?
-	.FourthExpanded = true;				// Enable new expanded fourth classes: Ex. Hyper Novice, Rebellion, Shinkiro/Shiranui?
+	.FourthClass = false;				// Disabled — Episódio 17.1 lockdown
+	.FourthExpanded = false;			// Disabled — 4th-tier expanded classes blocked
 	.ThirdClass = true;					// Enable third classes?
 	.RebirthClass = true;				// Enable rebirth classes?
 	.SecondExpanded = true;				// Enable new expanded second classes: Ex. Super Novice, Kagerou/Oboro, Rebellion?
