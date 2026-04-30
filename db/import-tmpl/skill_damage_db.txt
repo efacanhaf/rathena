@@ -67,23 +67,8 @@ PR_MAGNUS,BL_PC,1,0,75,75,75
 KO_BAKURETSU,BL_PC,1,0,30,30,30
 
 // =============================================================================
-// DimensionsRO — Phase 4: PvE damage caps on top 5 dominant 3rd-class skills.
-// Conservative PvE-only nerfs (vs_players=0). Reversible by deleting lines.
+// Phase 4 REVERTED — 3rds são FRACAS pro conteúdo de 17.1, não dominantes.
+// Ao invés de nerfar skills topo, vamos buffar as fracas pra compensar.
+// Nova abordagem: net buff em todas, nivelar pra cima sem cortar teto.
+// (Originalmente Phase 4 nerfava CartCannon, Comet, TigerCannon, ArrowStorm, Adoramus.)
 // =============================================================================
-
-// Genetic Cart Cannon — controls farming spam (-15%, was 1500-2500% with refine)
-GN_CARTCANNON,BL_PC,1,0,-15,-15,-15
-
-// Warlock Comet — caps AoE one-shot (-20%, ~4500% -> ~3600% effective)
-WL_COMET,BL_PC,1,0,-20,-20,-20
-
-// Sura Tiger Cannon — partial cap on HP%/SP% gear-runaway (-25%)
-// NOTE: proper source-code cap on %HP/%SP contribution is implemented in Phase 6.
-SR_TIGERCANNON,BL_PC,1,0,-25,-25,-25
-
-// Ranger Arrow Storm — caps farming loop with White Wing Set (-15%)
-RA_ARROWSTORM,BL_PC,1,0,-15,-15,-15
-
-// Arch Bishop Adoramus — differentiates from buffed Magnus Exorcismus (-15%)
-// Adoramus stays viable as single-target burst; Magnus (+75% in Phase 3) is the AoE
-AB_ADORAMUS,BL_PC,1,0,-15,-15,-15

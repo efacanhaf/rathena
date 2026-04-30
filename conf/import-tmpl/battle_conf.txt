@@ -53,3 +53,9 @@ item_rate_treasure: 300
 
 // === Add drops (script-injected) ===
 item_rate_adddrop: 500
+
+// === Stat caps — Ep 17.1 server (no 4th classes) ===
+// iRO oficial 3rd class cap = 120. rAthena default 130 assume 4th class progression.
+// Travado em 120 pra match experiência canônica 17.1.
+max_third_parameter: 120
+max_third_trans_parameter: 120

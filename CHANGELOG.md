@@ -37,13 +37,25 @@ Changes accumulated on `develop` since last `main` release. When merging
 
 - **Server-side input lag tuning** (phase 2): adjusted `min_skill_delay_limit`,
   `default_walk_delay`, etc. for snappier feel.
-- **Phase 4 — PvE damage caps on 5 dominant 3rd-class skills** (`db/import-tmpl/skill_damage_db.txt`):
-  - `GN_CARTCANNON` -15% — caps Genetic farming spam
-  - `WL_COMET` -20% — controls AoE one-shot (~4500% → ~3600%)
-  - `SR_TIGERCANNON` -25% — Sura output cap (formula already non-HP%-based in modern rAthena)
-  - `RA_ARROWSTORM` -15% — caps White Wing Set farming loop
-  - `AB_ADORAMUS` -15% — differentiates from buffed Magnus (Phase 3)
-  All PvE-only (vs_players=0).
+- **EP 17.1 caps tightened** (`db/re/job_exp.yml`, `conf/import-tmpl/battle_conf.txt`):
+  3rd class hard-locked at Base Lv 175 / Job Lv 60 / Stat 120 (iRO oficial,
+  rAthena default era 200/70/130 assumindo progressão pra 4th class). Sem 4ths
+  no servidor, mantemos a experiência canônica de 17.1.
+
+### Reverted
+
+- **Phase 4 caps revertidos** — strategy shift: 3rds são FRACAS pro conteúdo
+  de 17.1, não dominantes. Ao invés de cortar topo (CartCannon, Comet,
+  TigerCannon, ArrowStorm, Adoramus -15 a -25%), vamos buffar as fracas pra
+  fechar gap. Phase 4 v2 vai REPLACE com buffs adicionais nas skills sub-tier.
+  Commits Phase 4 ficam no histórico mas linhas removidas do `skill_damage_db.txt`.
+
+### Abandoned
+
+- **Phase 5.3 — Mob HP override scaffold**: estratégia de reduzir HP/DEF dos
+  mobs de 17.1 abandonada. Decisão: nunca alterar mobs do conteúdo, ajustes
+  ficam só do lado do player (skills, gear). Scaffold removido de
+  `db/import-tmpl/mob_db.yml`.
 
 ### Added (source-level, requires recompile)
 
