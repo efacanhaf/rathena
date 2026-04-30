@@ -1146,3 +1146,38 @@ Header:
 #      - Item: Zombie_Master_Card
 #        Rate: 1
 #        StealProtected: true
+
+###########################################################################
+# DimensionsRO — Phase 5.3 Ep 17.1 mob tuning (scaffold)
+#
+# This section is intentionally EMPTY by default. Phase 3 (skill buffs),
+# Phase 4 (skill caps), and Phase 5 mid-rate baseline already address
+# the gear-vs-content gap from multiple angles. Applying blanket mob HP
+# -15% on top risks over-correcting and trivializing content.
+#
+# Activation: uncomment specific blocks below as playtest reveals which
+# mobs are still painful. Conservative target: -10 to -15% HP.
+#
+# Reference Ep 17.1 mob IDs and base HP:
+#   2528 FACEWORM           HP: 482,427    (Faceworm Nest)
+#   2529 FACEWORM_QUEEN     HP: 50,000,000 (Faceworm Nest boss)
+#   2530 FACEWORM_DARK      HP: 5,000,000  (Faceworm Nest mini-boss)
+#   3074 TIMEHOLDER         HP: 25,000,000 (Last Room boss)
+#   3454 HEART_HUNTER_N     HP: 20,714     (Heart Hunter War Base mob)
+#
+# Workflow:
+#   1. Identify pain mob via player report or DPS log
+#   2. Uncomment block, set new Hp value
+#   3. @reloadmobdb in-game (no restart)
+#   4. Document the change in CHANGELOG.md under [Unreleased]
+#
+# Header: # MOB_DB version 3
+# Body:
+#   - Id: 3454
+#     AegisName: HEART_HUNTER_N
+#     Hp: 17607        # was 20714 (-15%)
+#
+#   - Id: 2528
+#     AegisName: FACEWORM
+#     Hp: 410063       # was 482427 (-15%)
+###########################################################################
