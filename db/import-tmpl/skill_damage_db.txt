@@ -35,3 +35,33 @@
 // MO_EXTREMITYFIST,BL_PC,6,-50 // In PVP and GVG, players deal -50% (half) damage to other players with Asura Strike.
 // AB_ADORAMUS,BL_PC,6,50,0,10,15 // In PVP and GVG, players deal +50% damage to other players, +0% to mobs, +10% to bosses, and +15% to other with Adoramus.
 
+// =============================================================================
+// DimensionsRO — Phase 3: buff dead 3rd-class skills (PvE only).
+// Goal: raise the floor of underused skills so weak classes (Royal Guard solo,
+// Mechanic non-Mado, Shadow Chaser, Kagerou) have viable PvE alternatives.
+// PvP unchanged (vs_players = 0). Caster=BL_PC, Map=1 (normal maps).
+// Format: skill,caster,map,vs_players,vs_mobs,vs_bosses,vs_other
+// =============================================================================
+
+// Royal Guard — solo PvE filler (Banishing Point dies vs DB Rune Knight; Earth Drive niche)
+LG_BANISHINGPOINT,BL_PC,1,0,50,50,50
+LG_EARTHDRIVE,BL_PC,1,0,50,50,50
+
+// Mechanic — non-Mado options (Knuckle Boost stat-stick clone of Spiral Pierce; Arms Cannon late-game only)
+NC_BOOSTKNUCKLE,BL_PC,1,0,50,50,50
+NC_ARMSCANNON,BL_PC,1,0,30,30,30
+
+// Sura — alt build to Tiger Cannon (Knuckle Arrow underwhelming)
+SR_KNUCKLEARROW,BL_PC,1,0,30,30,30
+
+// Shadow Chaser — D-tier in PvE; Triangle Shot is its main damage skill
+SC_TRIANGLESHOT,BL_PC,1,0,50,50,50
+
+// Warlock — Chain Lightning post-Renewal nerfs; lets it compete with Comet for niche
+WL_CHAINLIGHTNING_ATK,BL_PC,1,0,30,30,30
+
+// Arch Bishop — Magnus Exorcismus rework: rescue from Adoramus shadow
+PR_MAGNUS,BL_PC,1,0,75,75,75
+
+// Kagerou/Oboro — Kunai Splash weak + heavy-kunai-issue (weight handled separately)
+KO_BAKURETSU,BL_PC,1,0,30,30,30

@@ -3,6 +3,8 @@
 
 #include "mob.hpp"
 
+#include <custom/ep17_1.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
@@ -1118,6 +1120,13 @@ int32 mob_spawn (mob_data *md)
 {
 	int32 i=0;
 	t_tick tick = gettick();
+
+#ifdef EP17_1_DISABLE_POST_MOBS
+	if (md && ep17_1::is_post_ep17_1_mob(md->mob_id)) {
+		// Silently refuse to spawn — caller treats >0 as failure.
+		return 1;
+	}
+#endif
 
 	md->next_thinktime = tick;
 	if (md->prev != nullptr)

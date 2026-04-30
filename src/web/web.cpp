@@ -30,6 +30,7 @@
 #include "http.hpp"
 #include "merchantstore_controller.hpp"
 #include "partybooking_controller.hpp"
+#include "status_controller.hpp"
 #include "userconfig_controller.hpp"
 
 
@@ -496,6 +497,7 @@ bool WebServer::initialize( int32 argc, char* argv[] ){
 	http_server->Post("/party/search", partybooking_search);
 	http_server->Post("/userconfig/load", userconfig_load);
 	http_server->Post("/userconfig/save", userconfig_save);
+	http_server->Get("/status", status_get);
 
 	// set up logger
 	http_server->set_logger(logger);
