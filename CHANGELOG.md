@@ -85,11 +85,10 @@ Changes accumulated on `develop` since last `main` release. When merging
 
 - **Phase 5.2 — Adventurer Starter Kit NPC** (`npc/custom/dro_starter_kit.txt`):
   vendor at `prontera 156,200` selling baseline 3rd-class kit (class-specific
-  Scarlet weapon +9 + Diabolus armor set +7 + Variant Shoes +7 + 2× Brisingamen)
-  for 500k zeny, once per character. All item IDs confirmed against rAthena DB
-  (Scarlet series, ids 1498/1839/13127/13327/15313/16040/18130/19550/20844/21015/28007/28102/28106/28705/29287/31925/2630). NOT enabled in
-  `scripts_custom.conf` until first GM playtest. Doram (Summoner) falls back to
-  Scarlet Mace pending Doram-specific weapon decision.
+  +9 weapon + Diabolus armor set +7 + 2× Brisingamen) for 500k zeny, once
+  per character. **Status: DRAFT** — item IDs are placeholders. Per-class
+  weapon mapping in `.dro-build/dro-starter-kit-loadouts.md` pending review.
+  NOT enabled in `scripts_custom.conf` until reviewed.
 
 ### Fixed
 
