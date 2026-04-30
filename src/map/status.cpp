@@ -5426,17 +5426,21 @@ void status_calc_regen_rate(block_list *bl, struct regen_data *regen, status_cha
 		regen->flag &= ~RGN_SP;
 
 	if (sc->getSCE(SC_TENSIONRELAX)) {
+		// DimensionsRO: HP regen aumentado (200->400) + adicionado SP regen (was none) — torna a skill viável
 		if (regen->state.overweight)
 			regen->state.overweight = false; // 1x HP regen
 		else {
-			regen->rate.hp += 200;
-			if (regen->sregen)
-				regen->sregen->rate.hp += 200;
+			regen->rate.hp += 400;
+			regen->rate.sp += 100;
+			if (regen->sregen) {
+				regen->sregen->rate.hp += 400;
+				regen->sregen->rate.sp += 100;
+			}
 		}
 	}
 
 	if (sc->getSCE(SC_MAGNIFICAT))
-		regen->rate.sp += 100;
+		regen->rate.sp += 150;  // DimensionsRO: 100 -> 150 (regen rate 2.5x base instead of 2x)
 
 	if (sc->getSCE(SC_REGENERATION)) {
 		const struct status_change_entry *sce = sc->getSCE(SC_REGENERATION);
@@ -11293,10 +11297,12 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			if( !(flag&SCSTART_NOAVOID) ) {
 				map_session_data *tsd;
 				int32 i;
+				// DimensionsRO: AutoGuard block rate +30% (vanilla lv10 = 30%, agora 40%)
 				for( i = val2 = 0; i < val1; i++) {
 					int32 t = 5-(i / 2);
 					val2 += (t < 0)? 1:t;
 				}
+				val2 = val2 * 13 / 10;
 
 				if( bl->type&(BL_PC|BL_MER) ) {
 					if( sd ) {
@@ -11896,8 +11902,9 @@ static bool status_change_start_post_delay(block_list* src, block_list* bl, sc_t
 			break;
 		case SC_HALLUCINATIONWALK:
 		case SC_NPC_HALLUCINATIONWALK:
-			val2 = 50 * val1; // Evasion rate of physical attacks. Flee
-			val3 = 10 * val1; // Evasion rate of magical attacks.
+			// DimensionsRO: Flee fisico 50/lvl -> 100/lvl, magic flee 10/lvl -> 20/lvl
+			val2 = 100 * val1; // Evasion rate of physical attacks. Flee
+			val3 = 20 * val1; // Evasion rate of magical attacks.
 			break;
 		case SC_MARSHOFABYSS:
 			if( bl->type == BL_PC )

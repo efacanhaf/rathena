@@ -1815,15 +1815,14 @@ int64 battle_calc_damage(block_list *src,block_list *bl,struct Damage *d,int64 d
 			damage += damage * (3 * tsc->getSCE(SC_SHADOW_SCAR)->val1) / 100;
 
 		// Damage reductions
-		// Assumptio increases DEF on RE mode, otherwise gives a reduction on the final damage. [Igniz]
-#ifndef RENEWAL
+		// DimensionsRO: Assumptio agora dá reduction também em renewal (não só DEF buff).
+		// Justificativa: 17.1 dmg supera DEF scaling, precisamos de flat reduction.
 		if( tsc->getSCE(SC_ASSUMPTIO) ) {
 			if( map_flag_vs(bl->m) )
-				damage = (int64)damage*2/3; //Receive 66% damage
+				damage = (int64)damage*2/3; //PvP/GvG: -33% damage
 			else
-				damage /= 2; //Receive 50% damage
+				damage /= 2; //PvE: -50% damage
 		}
-#endif
 
 		if( tsc->getSCE( SC_SHADOW_CLOCK ) != nullptr && ( flag&(BF_WEAPON|BF_MAGIC) ) ){
 			damage = damage * 85 / 100;
@@ -1884,13 +1883,15 @@ int64 battle_calc_damage(block_list *src,block_list *bl,struct Damage *d,int64 d
 #endif
 			) )
 		{
+			// DimensionsRO: Energy Coat buffed — reduction 10%/12.5%/15%/17.5%/20% por SP interval.
+			// SP cost reduzido pra metade. Cobre weapon + magic em renewal (já era o caso).
 			status_data* status = status_get_status_data(*bl);
 			int32 per = 100*status->sp / status->max_sp -1; //100% should be counted as the 80~99% interval
 			per /=20; //Uses 20% SP intervals.
-			//SP Cost: 1% + 0.5% per every 20% SP
-			if (!status_charge(bl, 0, (10+5*per)*status->max_sp/1000))
+			//SP Cost: 0.5% + 0.3% per every 20% SP (was 1% + 0.5%)
+			if (!status_charge(bl, 0, (5+3*per)*status->max_sp/1000))
 				status_change_end(bl, SC_ENERGYCOAT);
-			damage -= damage * 6 * (1 + per) / 100; //Reduction: 6% + 6% every 20%
+			damage -= damage * 10 * (1 + per) / 100; //Reduction: 10% + 10% every 20% (was 6% + 6%)
 		}
 
 		if(tsc->getSCE(SC_GRANITIC_ARMOR))

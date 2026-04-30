@@ -1616,27 +1616,28 @@ Body:
     Range: 9
     Hit: Single
     HitCount: 1
+    # DimensionsRO: duração x1.5 (vanilla 60-240s -> 90-360s) — QoL across Acolyte tree
     Duration1:
       - Level: 1
-        Time: 60000
+        Time: 90000
       - Level: 2
-        Time: 80000
-      - Level: 3
-        Time: 100000
-      - Level: 4
         Time: 120000
-      - Level: 5
-        Time: 140000
-      - Level: 6
-        Time: 160000
-      - Level: 7
+      - Level: 3
+        Time: 150000
+      - Level: 4
         Time: 180000
-      - Level: 8
-        Time: 200000
-      - Level: 9
-        Time: 220000
-      - Level: 10
+      - Level: 5
+        Time: 210000
+      - Level: 6
         Time: 240000
+      - Level: 7
+        Time: 270000
+      - Level: 8
+        Time: 300000
+      - Level: 9
+        Time: 330000
+      - Level: 10
+        Time: 360000
     Requires:
       SpCost:
         - Level: 1
@@ -2630,17 +2631,18 @@ Body:
     SplashArea: 18
     CastTime: 3200
     AfterCastActDelay: 2000
+    # DimensionsRO: duração x2 (vanilla 30-90s -> 60-180s) — caster SP economy
     Duration1:
       - Level: 1
-        Time: 30000
-      - Level: 2
-        Time: 45000
-      - Level: 3
         Time: 60000
-      - Level: 4
-        Time: 75000
-      - Level: 5
+      - Level: 2
         Time: 90000
+      - Level: 3
+        Time: 120000
+      - Level: 4
+        Time: 150000
+      - Level: 5
+        Time: 180000
     FixedCastTime: 800
     Requires:
       SpCost: 40
@@ -23400,17 +23402,18 @@ Body:
     Hit: Single
     HitCount: 1
     AfterCastActDelay: 1000
+    # DimensionsRO: duração +30s em todos lvls (vanilla 30-70s -> 60-100s)
     Duration1:
       - Level: 1
-        Time: 30000
-      - Level: 2
-        Time: 40000
-      - Level: 3
-        Time: 50000
-      - Level: 4
         Time: 60000
-      - Level: 5
+      - Level: 2
         Time: 70000
+      - Level: 3
+        Time: 80000
+      - Level: 4
+        Time: 90000
+      - Level: 5
+        Time: 100000
     Requires:
       SpCost:
         - Level: 1
@@ -25974,7 +25977,8 @@ Body:
     SplashArea: -1
     CastTime: 3000
     AfterCastActDelay: 300
-    Duration1: 180000
+    # DimensionsRO: duração 3min -> 4min
+    Duration1: 240000
     Cooldown: 10000
     FixedCastTime: 1000
     Requires:
@@ -33159,18 +33163,19 @@ Body:
     Hit: Single
     HitCount: 1
     AfterCastActDelay: 500
-    Duration1: 5000
+    # DimensionsRO: duração 5s -> 8s + cooldown reduzido pela metade (RG defensive)
+    Duration1: 8000
     Cooldown:
       - Level: 1
-        Time: 100000
+        Time: 50000
       - Level: 2
-        Time: 90000
+        Time: 45000
       - Level: 3
-        Time: 80000
+        Time: 40000
       - Level: 4
-        Time: 70000
+        Time: 35000
       - Level: 5
-        Time: 60000
+        Time: 30000
     Requires:
       SpCost:
         - Level: 1

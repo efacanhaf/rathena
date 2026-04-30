@@ -3,130 +3,180 @@
 All notable changes to the DimensionsRO server (rAthena fork) are tracked here.
 
 Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
-Sections: **Added**, **Changed**, **Fixed**, **Removed**, **Deprecated**, **Security**.
 
 ---
 
-## [Unreleased] — develop branch (not yet in production)
+## [1.0.0] — 2026-04-30
 
-Changes accumulated on `develop` since last `main` release. When merging
-`develop → main`, move this whole block under a new versioned heading
-(e.g. `## [1.1.0] — 2026-05-XX`) and start a fresh `[Unreleased]` block.
+Release inicial consolidado da DimensionsRO. Esta versão agrega todas as
+modificações desde o fork do upstream rAthena (`master` original) até o estado
+atual em `develop`. Após este ponto, mudanças seguem o ciclo normal `develop →
+main` com versionamento incremental (1.0.x patches, 1.x.0 features).
 
-### Added
+### Server Identity & Scope
 
-- **Phase 5 — mid-rate baseline drop & exp config** (`conf/import-tmpl/battle_conf.txt`):
-  EXP 5x base/job, 3x quest. Equip 5x normal / 10x boss / 15x MVP.
-  Cards 3x / 2x MVP. Common/Heal/Use 5x. Pace ~30-40h casual to max 3rd class;
-  events (weekend +5x, anniversary +10x) lift effective rate to 10-20x.
-- **Phase 3 — buffs to 9 dead 3rd-class PvE skills** (`db/import-tmpl/skill_damage_db.txt`):
-  LG_BANISHINGPOINT, LG_EARTHDRIVE, NC_BOOSTKNUCKLE (+50%);
-  NC_ARMSCANNON, SR_KNUCKLEARROW, WL_CHAINLIGHTNING_ATK, KO_BAKURETSU (+30%);
-  SC_TRIANGLESHOT (+50%); PR_MAGNUS / Magnus Exorcismus (+75%, Adoramus rescue).
-  PvE only (vs_players unchanged), normal maps.
 - **Episode 17.1 content lockdown** (`src/custom/ep17_1.hpp`,
-  `npc/re/scripts_post_ep17_1.conf`): server stops at Ep 17.1 — no 4th classes,
-  no post-17.1 quests/instances/items.
-- **Web `GET /status` endpoint** (`src/web/status_controller.cpp`):
-  returns `{online: bool, players: int}` for launcher integration.
-- **CI: build rAthena binaries on Oracle Linux 9 x86_64** (`.github/workflows/build_dimensionsro_prod.yml`).
-- **Dev environment isolation:** ports `72xx` instead of `62xx`,
-  `PACKET_OBFUSCATION` off, separate `ragnarok_dev` DB.
+  `npc/re/scripts_post_ep17_1.conf`): server trava em Ep 17.1. Sem 4th classes,
+  sem quests/instances/items pós-17.1. `pc_jobchange` bloqueia advancement pra
+  classes 4th com mensagem in-game.
+- **3rd class caps travados pra match iRO oficial 17.1** (`db/re/job_exp.yml`,
+  `conf/import-tmpl/battle_conf.txt`):
+  - Base Level max: 175 (era 200 default rathena)
+  - Job Level max: 60 (era 70 default)
+  - Stat max: 120 (era 130, default rathena assumia progressão pra 4th)
 
-### Changed
+### Rates & Drop Configuration
 
-- **Server-side input lag tuning** (phase 2): adjusted `min_skill_delay_limit`,
-  `default_walk_delay`, etc. for snappier feel.
-- **EP 17.1 caps tightened** (`db/re/job_exp.yml`, `conf/import-tmpl/battle_conf.txt`):
-  3rd class hard-locked at Base Lv 175 / Job Lv 60 / Stat 120 (iRO oficial,
-  rAthena default era 200/70/130 assumindo progressão pra 4th class). Sem 4ths
-  no servidor, mantemos a experiência canônica de 17.1.
+- **Mid-rate baseline** (`conf/import-tmpl/battle_conf.txt`):
+  - EXP: 5x base / 5x job / 3x quest
+  - Equip: 5x normal / 10x boss / 15x MVP
+  - Cards: 3x normal / 3x boss / 2x MVP
+  - Common/Heal/Use: 5x
+  - MVP-specific drops (Old Card Album etc): 3x
+  - Pace: ~30-40h casual to max 3rd class. Eventos (weekend +5x, anniversary
+    +10x) elevam efetivo pra 10-20x para sessões curtas.
 
-### Reverted
+### Skill Rebalance — PvE Only (vs_players=0)
 
-- **Phase 4 caps revertidos** — strategy shift: 3rds são FRACAS pro conteúdo
-  de 17.1, não dominantes. Ao invés de cortar topo (CartCannon, Comet,
-  TigerCannon, ArrowStorm, Adoramus -15 a -25%), vamos buffar as fracas pra
-  fechar gap. Phase 4 v2 vai REPLACE com buffs adicionais nas skills sub-tier.
-  Commits Phase 4 ficam no histórico mas linhas removidas do `skill_damage_db.txt`.
+Estratégia tiered: 3rds são fracas pro conteúdo de 17.1, todas skills sobem,
+escalado pela "fraqueza original". Aplicado via `db/import-tmpl/skill_damage_db.txt`.
 
-### Abandoned
+**Tier C — skills "dead" (buff alto, +45% a +90%):**
 
-- **Phase 5.3 — Mob HP override scaffold**: estratégia de reduzir HP/DEF dos
-  mobs de 17.1 abandonada. Decisão: nunca alterar mobs do conteúdo, ajustes
-  ficam só do lado do player (skills, gear). Scaffold removido de
-  `db/import-tmpl/mob_db.yml`.
+| Skill | Buff | Classe |
+|---|---|---|
+| LG_BANISHINGPOINT | +65% | Royal Guard |
+| LG_EARTHDRIVE | +65% | Royal Guard |
+| NC_BOOSTKNUCKLE | +65% | Mechanic non-Mado |
+| NC_ARMSCANNON | +45% | Mechanic |
+| SR_KNUCKLEARROW | +45% | Sura |
+| SC_TRIANGLESHOT | +65% | Shadow Chaser |
+| WL_CHAINLIGHTNING_ATK | +45% | Warlock |
+| PR_MAGNUS | +90% | Arch Bishop / Priest |
+| KO_BAKURETSU | +45% | Kagerou |
 
-### Added (source-level, requires recompile)
+**Tier A — main skills sub-tier (buff moderado, +30%):**
 
-- **Phase 6.3 — `nc_madogear_no_fuel` battle config** (`src/map/battle.{cpp,hpp}`,
-  `src/map/skill.cpp`, `conf/battle/skill.conf`): new server-wide flag to
-  disable Magic_Gear_Fuel consumption for Mechanic skills. Default `no`
-  (vanilla behavior). When set to `yes`, removes the fuel-management UX
-  burden for Mechanic / Mado players without breaking per-player item
-  bonuses. Reuses existing `sd->special_state.no_mado_fuel` infrastructure.
+| Skill | Classe |
+|---|---|
+| LG_HESPERUSLIT | Royal Guard |
+| RK_DRAGONBREATH | Rune Knight |
+| RK_DRAGONBREATH_WATER | Rune Knight |
+| NC_VULCANARM | Mechanic |
+| NC_AXEBOOMERANG | Mechanic |
+| SR_RAMPAGEBLASTER | Sura |
+| GN_DEMONIC_FIRE | Genetic |
+| AB_JUDEX | Arch Bishop |
+| SC_FATALMENACE | Shadow Chaser |
+| WL_TETRAVORTEX | Warlock |
+| WL_JACKFROST | Warlock |
+| RA_AIMEDBOLT | Ranger |
 
-### Deferred (technical reasons)
+**Tier S — top-tier farming/burst skills (buff suave, +15%):**
 
-- **Phase 6.1 — Royal Guard Banding refactor** (partial-party scaling).
-  Requires rewriting `skill_check_pc_partner` semantics, which affects
-  multiple Royal Guard skills (Banding, Hesperus Lit, Inspiration,
-  Banishing Buster). Risk of breaking core Royal Guard mechanics
-  without careful playtest. Defer until Phase 7 validation reveals
-  whether solo Royal Guard is still painful with Phase 3 buffs.
-- **Phase 6.2 — Shadow Chaser Reproduce unlock** (re-cast without lock).
-  Touching `SC__REPRODUCE` state machine + `skill_reproduce` handlers
-  risks regressing skill copy mechanics broadly. Defer pending playtest
-  evidence that Shadow Chaser is still unplayable.
-- **Phase 6.4 — Sura Tiger Cannon HP%/SP% cap.** OBSOLETE: modern
-  rAthena (battle.cpp:5674) uses `skill_lv * 240 + target_lv * 40` flat
-  formula, not HP%/SP% scaling. The historical concern from community
-  research no longer applies; Phase 4 -25% damage cap is sufficient.
+| Skill | Classe |
+|---|---|
+| GN_CARTCANNON | Genetic |
+| WL_COMET | Warlock |
+| SR_TIGERCANNON | Sura |
+| RA_ARROWSTORM | Ranger |
+| AB_ADORAMUS | Arch Bishop |
 
-### Documented (scaffolding, no behavior change)
+PvP intacto — todas adjustments têm `vs_players=0`.
 
-- **Phase 5.3 — Mob HP override scaffold** (`db/import-tmpl/mob_db.yml`):
-  Placeholder file with documented workflow for tuning Ep 17.1 instance
-  mob HP/DEF post-playtest. Pre-populated with reference IDs (FACEWORM,
-  TIMEHOLDER, HEART_HUNTER_N) but no actual overrides applied. Reason:
-  Phase 3 buffs + Phase 4 caps + mid-rate baseline may already address
-  the gear-vs-content gap; blanket -15% HP could over-correct. To
-  activate: uncomment specific mob blocks based on player feedback.
+### Defensive Skill Buffs (source-level, requer recompile)
 
-### Fixed
+Skills defensivas universais buffadas pra player taxa de sobrevivência vs
+conteúdo de 17.1. Aplicado em `src/map/battle.cpp`, `src/map/status.cpp` e
+`db/re/skill_db.yml`.
 
-- _(none yet on this Unreleased)_
+- **HP_ASSUMPTIO**: agora dá -50% damage taken em PvE renewal (era só DEF
+  buff). Mantém scaling por skill level. PvP fica em -33%.
+- **MG_ENERGYCOAT**: damage reduction 6%/12%/18%/24%/30% → 10%/20%/30%/40%/50%
+  por SP interval. SP cost por hit reduzido pela metade (1%+0.5% → 0.5%+0.3%).
+- **LK_TENSIONRELAX**: HP regen rate 200 → 400. Adicionado SP regen 100 (skill
+  agora é viável pra solo farm).
+- **PR_MAGNIFICAT**: SP regen multiplier 100 → 150 (regen 2.5x base). Duração
+  estendida 30-90s → 60-180s.
+- **AL_BLESSING**: duração estendida x1.5 (lvl 10: 240s → 360s). Beneficia
+  todas classes da Acolyte tree.
+- **LG_KINGS_GRACE**: duração 5s → 8s. Cooldown reduzido pela metade
+  (100s → 50s lvl 1, 60s → 30s lvl 5).
+- **SC_AUTOGUARD**: block rate scaling +30% (lvl 10: 30% → 40%).
+- **GC_HALLUCINATIONWALK**: physical Flee 50/lvl → 100/lvl, magic Flee
+  10/lvl → 20/lvl.
+- **SC__SHADOWFORM**: duração +30s em todos lvls (30-70s → 60-100s).
+- **MI_RUSH_WINDMILL**: duração 3min → 4min.
 
----
+### Server-Side Tuning
 
-## [1.0.0] — 2026-04-26 (production v1)
+- **Input lag tuning Phase 1 + 2** (`conf/battle/battle.conf`,
+  `conf/battle/client.conf`, `conf/battle/skill.conf`):
+  - `damage_walk_delay_rate: 100 → 80` — recovery mais snappy após hits
+  - `snap_dodge: yes` — snap skills (Asura/Body Relocation) dodge corretamente
+  - `max_walk_path: 17 → 25` — menos pathfind recalcs em click-walks longos
+  - `multihit_delay: 200 → 100` — menos stunlock pós multi-hit
+  - `player_damage_delay_rate: 100 → 50` — walk-delay menor após dano
+  - `default_walk_delay: 300 → 200` — "can't walk" reduzido pós-skill
+- **`nc_madogear_no_fuel` battle config** (`src/map/battle.{cpp,hpp}`,
+  `src/map/skill.cpp`, `conf/battle/skill.conf`): nova flag server-wide pra
+  desabilitar consumo de Magic_Gear_Fuel. Default `no` (vanilla). Quando `yes`,
+  remove o burden de fuel-management do Mechanic/Mado sem quebrar item bonuses
+  per-player. Reusa infra `sd->special_state.no_mado_fuel`.
 
-Initial DimensionsRO production server. Baseline rAthena upstream + custom changes:
+### Web / Infra
 
-### Added
+- **Web `GET /status` endpoint** (`src/web/status_controller.cpp`): retorna
+  `{online: bool, players: int}` pro launcher consumir status do server.
+- **CI: build automatizado** (`.github/workflows/build_dimensionsro_prod.yml`):
+  builda binários rAthena no Oracle Linux 9 x86_64 pra prod deployment.
+- **Dev environment isolation**: ports `72xx` (vs prod `62xx`),
+  `PACKET_OBFUSCATION` off em map-server dev, DB `ragnarok_dev` separado.
 
-- DimensionsRO client v1.0 (Vanilla/HD mode swap, custom launcher with
-  GitHub patcher, Oracle Cloud login at `163.176.144.14:6266`)
-- Server-side input lag reduction phase 1
-- (Other Phase 1 customizations from initial fork — see git history before
-  this changelog was introduced)
+### Decisões Estratégicas (não-implementadas, registradas)
+
+- **Phase 4 nerfs revertidos**: estratégia inicial de cap nas top-tier skills
+  (CartCannon -15%, Comet -20%, TigerCannon -25%, ArrowStorm -15%, Adoramus
+  -15%) foi revertida. 3rds são fracas pro conteúdo de 17.1; cortar topo
+  agravaria. Substituído pela strategy "all-buff progressivo" descrita em
+  Skill Rebalance acima.
+- **Phase 5.3 mob HP overrides**: scaffold pra reduzir HP/DEF de mobs
+  Ep 17.1 (FACEWORM, TIMEHOLDER, HEART_HUNTER) abandonado. Decisão: nunca
+  tocar em mobs do conteúdo, ajustes ficam só do lado do player.
+- **Phase 6.1 Royal Guard Banding refactor**: deferred. Requer rewrite de
+  `skill_check_pc_partner` semantics, risk de quebrar outras Royal Guard
+  skills (Hesperus Lit, Inspiration, Banishing Buster) sem playtest. Phase 3
+  buffs já endereçam parte do solo-pain do RG.
+- **Phase 6.2 Shadow Chaser Reproduce**: investigado, OBSOLETO. Modern rAthena
+  (`skill.cpp:801`) não tem o "lock" que a comunidade reportava em clientes
+  antigos. Reproduce já copia continuamente skills do target.
+
+### Client (DimensionsRO 1.0)
+
+(Tracked em repo separado do client; resumo aqui)
+
+- Vanilla/HD mode swap funcional
+- Custom launcher com GitHub patcher
+- Login point: Oracle Cloud `163.176.144.14:6266`
+- Server name: DimensionsRO
+- IP de prod escrito em `server.grf/data/clientinfo.xml`
 
 ---
 
 ## How to use this changelog
 
-1. **Every commit on `develop`** that introduces user-visible behavior
-   (gameplay, balance, quest, instance, drop rate, exp, GM commands,
-   client behavior) MUST add an entry under `[Unreleased]`.
-2. **Internal changes** (refactors, build fixes that don't change behavior,
-   doc-only) can skip the changelog.
-3. **At merge time `develop → main`**, the `[Unreleased]` block becomes
-   a new versioned heading. Bump the version per [SemVer](https://semver.org/):
-   - **MAJOR** (1.x.x → 2.0.0): breaking changes (e.g. wipe, char migration)
-   - **MINOR** (1.0.x → 1.1.0): new features (new instances, classes, systems)
-   - **PATCH** (1.0.0 → 1.0.1): fixes and balance tweaks
-4. **Production release** = the `main` branch tag matching that version.
-   Player-facing changelog (Discord announcement) derived from this file.
+1. **Cada commit em `develop`** que introduz user-visible behavior (gameplay,
+   balance, quest, instance, drop rate, exp, GM commands, client behavior)
+   adiciona entry sob `[Unreleased]`.
+2. **Internal changes** (refactors, build fixes que não mudam comportamento,
+   doc-only) podem skipar o changelog.
+3. **No merge `develop → main`**, bloco `[Unreleased]` vira nova versão.
+   Bump por [SemVer](https://semver.org/):
+   - **MAJOR** (1.x.x → 2.0.0): breaking (ex: wipe, char migration)
+   - **MINOR** (1.0.x → 1.1.0): novas features (instances, classes, sistemas)
+   - **PATCH** (1.0.0 → 1.0.1): fixes e balance tweaks
+4. **Production release** = tag em `main` com a versão. Player-facing
+   changelog (Discord announcement) derivado deste arquivo.
 
 ---
 
