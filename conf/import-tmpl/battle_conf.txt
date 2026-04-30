@@ -13,8 +13,7 @@
 //   - Weekend +5x event:    effective 10x base, ~18h max level
 //   - Anniversary +10x:     effective 15x base, ~12h max level
 //
-// Cards at 3x baseline = ~0.03% (vs vanilla 0.01%). Far below Eduardo's
-// "1% during events" target — events would push to ~0.6% with +20x multiplier.
+// Cards: 100x normal/boss (~1%), 10x MVP (~0.1%). Eduardo's target rate.
 // =============================================================================
 
 // === EXP ===
@@ -41,9 +40,9 @@ item_rate_equip_boss: 1000
 item_rate_equip_mvp: 1500
 
 // === Cards ===
-item_rate_card: 300
-item_rate_card_boss: 300
-item_rate_card_mvp: 200
+item_rate_card: 10000
+item_rate_card_boss: 10000
+item_rate_card_mvp: 1000
 
 // === MVP-specific drops (Old Card Album, Old Violet Box, etc) ===
 item_rate_mvp: 300
