@@ -9955,7 +9955,8 @@ struct s_skill_condition skill_get_requirement(map_session_data* sd, uint16 skil
 					}
 				}
 				// Check requirement for Magic Gear Fuel
-				if (req.itemid[i] == ITEMID_MAGIC_GEAR_FUEL && sd->special_state.no_mado_fuel)
+				// [DimensionsRO] Also skip fuel cost if global config nc_madogear_no_fuel is enabled
+				if (req.itemid[i] == ITEMID_MAGIC_GEAR_FUEL && (sd->special_state.no_mado_fuel || battle_config.nc_madogear_no_fuel))
 					req.itemid[i] = req.amount[i] = 0;
 			}
 			break;

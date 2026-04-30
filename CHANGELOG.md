@@ -45,6 +45,32 @@ Changes accumulated on `develop` since last `main` release. When merging
   - `AB_ADORAMUS` -15% — differentiates from buffed Magnus (Phase 3)
   All PvE-only (vs_players=0).
 
+### Added (source-level, requires recompile)
+
+- **Phase 6.3 — `nc_madogear_no_fuel` battle config** (`src/map/battle.{cpp,hpp}`,
+  `src/map/skill.cpp`, `conf/battle/skill.conf`): new server-wide flag to
+  disable Magic_Gear_Fuel consumption for Mechanic skills. Default `no`
+  (vanilla behavior). When set to `yes`, removes the fuel-management UX
+  burden for Mechanic / Mado players without breaking per-player item
+  bonuses. Reuses existing `sd->special_state.no_mado_fuel` infrastructure.
+
+### Deferred (technical reasons)
+
+- **Phase 6.1 — Royal Guard Banding refactor** (partial-party scaling).
+  Requires rewriting `skill_check_pc_partner` semantics, which affects
+  multiple Royal Guard skills (Banding, Hesperus Lit, Inspiration,
+  Banishing Buster). Risk of breaking core Royal Guard mechanics
+  without careful playtest. Defer until Phase 7 validation reveals
+  whether solo Royal Guard is still painful with Phase 3 buffs.
+- **Phase 6.2 — Shadow Chaser Reproduce unlock** (re-cast without lock).
+  Touching `SC__REPRODUCE` state machine + `skill_reproduce` handlers
+  risks regressing skill copy mechanics broadly. Defer pending playtest
+  evidence that Shadow Chaser is still unplayable.
+- **Phase 6.4 — Sura Tiger Cannon HP%/SP% cap.** OBSOLETE: modern
+  rAthena (battle.cpp:5674) uses `skill_lv * 240 + target_lv * 40` flat
+  formula, not HP%/SP% scaling. The historical concern from community
+  research no longer applies; Phase 4 -25% damage cap is sufficient.
+
 ### Documented (scaffolding, no behavior change)
 
 - **Phase 5.3 — Mob HP override scaffold** (`db/import-tmpl/mob_db.yml`):

@@ -429,6 +429,8 @@ struct Battle_Config
 	int32 pk_min_level; // [celest]
 	int32 skill_steal_max_tries; //max steal skill tries on a mob. if 0, then w/o limit [Lupus]
 	int32 skill_steal_random_options;
+	int32 nc_madogear_no_fuel; // [DimensionsRO] If yes, Mechanic skills don't consume Magic_Gear_Fuel
+
 	int32 motd_type; // [celest]
 	int32 exp_calc_type;
 	int32 exp_bonus_attacker;
