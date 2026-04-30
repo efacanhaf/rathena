@@ -37,6 +37,13 @@ Changes accumulated on `develop` since last `main` release. When merging
 
 - **Server-side input lag tuning** (phase 2): adjusted `min_skill_delay_limit`,
   `default_walk_delay`, etc. for snappier feel.
+- **Phase 4 — PvE damage caps on 3 dominant 3rd-class skills** (`db/import-tmpl/skill_damage_db.txt`):
+  - `GN_CARTCANNON` -15% vs mobs/bosses/other — caps Genetic farming spam
+  - `WL_COMET` -20% vs mobs/bosses/other — controls AoE one-shot (~4500% → ~3600%)
+  - `SR_TIGERCANNON` -25% vs mobs/bosses/other — partial cap on HP%/SP% gear-runaway
+  PvP unchanged (vs_players=0). Arrow Storm and Adoramus deferred —
+  Phase 3 buffs to alternative skills may suffice. Tiger Cannon's
+  proper source-code cap (%HP/%SP contribution limit) is queued for Phase 6.
 
 ### Draft (not yet enabled)
 
