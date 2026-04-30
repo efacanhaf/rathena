@@ -62,27 +62,14 @@ Changes accumulated on `develop` since last `main` release. When merging
   Banishing Buster). Risk of breaking core Royal Guard mechanics
   without careful playtest. Defer until Phase 7 validation reveals
   whether solo Royal Guard is still painful with Phase 3 buffs.
-- **Phase 6.2 — Shadow Chaser Reproduce unlock.** OBSOLETE on inspection:
-  modern rAthena (`skill.cpp:801`) Reproduce continuously copies whatever
-  the target casts while `SC__REPRODUCE` is active — there is no actual
-  "lock" preventing re-cast, only the per-skill copy semantics. The
-  community concern from older clients no longer applies.
+- **Phase 6.2 — Shadow Chaser Reproduce unlock** (re-cast without lock).
+  Touching `SC__REPRODUCE` state machine + `skill_reproduce` handlers
+  risks regressing skill copy mechanics broadly. Defer pending playtest
+  evidence that Shadow Chaser is still unplayable.
 - **Phase 6.4 — Sura Tiger Cannon HP%/SP% cap.** OBSOLETE: modern
   rAthena (battle.cpp:5674) uses `skill_lv * 240 + target_lv * 40` flat
   formula, not HP%/SP% scaling. The historical concern from community
   research no longer applies; Phase 4 -25% damage cap is sufficient.
-
-### Added (GM tooling)
-
-- **Phase 7 — Validation Kit NPCs** (`npc/custom/dro_validation_kit.txt`):
-  GM-only validation tooling for benchmarking Phase 3-6 changes.
-  - `prontera 158,200` "DPS Dummy" — invulnerable target with 30s damage
-    window, accumulates total + average DPS.
-  - `prontera 160,200` "Validation Outfitter" — instantly equips the GM
-    with the same tier-1 kit as the Adventurer Starter Kit (free, repeatable).
-  Both gated by `getgroupid() >= 99`. NOT enabled in `scripts_custom.conf`
-  by default — uncomment to activate. Methodology in
-  `.dro-build/phase7-validation-methodology.md`.
 
 ### Documented (scaffolding, no behavior change)
 
