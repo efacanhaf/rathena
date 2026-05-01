@@ -250,6 +250,55 @@ Body:
         CostsHuman:
             RequiredItem: J_Shop_Coupon2
             RequiredItemBox: J_Shop_Coupon2
+      - Index: 31
+        Value: 31
+        CostsHuman:
+            RequiredItem: J_Shop_Coupon2
+            RequiredItemBox: J_Shop_Coupon2
+      - Index: 32
+        Value: 32
+        CostsHuman:
+            Price: 100000
+      - Index: 33
+        Value: 33
+        CostsHuman:
+            Price: 3000000
+      - Index: 34
+        Value: 34
+        CostsHuman:
+            Price: 3000000
+      - Index: 35
+        Value: 35
+        CostsHuman:
+            Price: 3000000
+      - Index: 36
+        Value: 36
+        CostsHuman:
+            Price: 3000000
+      - Index: 37
+        Value: 37
+        CostsHuman:
+            Price: 3000000
+      - Index: 38
+        Value: 38
+        CostsHuman:
+            Price: 3000000
+      - Index: 39
+        Value: 39
+        CostsHuman:
+            Price: 3000000
+      - Index: 40
+        Value: 40
+        CostsHuman:
+            Price: 3000000
+      - Index: 41
+        Value: 41
+        CostsHuman:
+            Price: 3000000
+      - Index: 42
+        Value: 42
+        CostsHuman:
+            Price: 3000000
   - Look: Clothes_Color
     Options:
       - Index: 1
