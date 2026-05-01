@@ -1925,6 +1925,13 @@
 	parseable_packet( HEADER_CZ_REQ_STYLE_CHANGE2, sizeof( PACKET_CZ_REQ_STYLE_CHANGE2 ), clif_parse_stylist_buy, 0 );
 #endif
 
+// kRO 2024+ stylist Apply uses 0x0bf7 (22 bytes) instead of 0x0afc (16 bytes).
+// Accept it so the client doesn't disconnect; we still process the original
+// 8 fields via clif_parse_stylist_buy (3 trailing int16 are ignored).
+#if PACKETVER >= 20211103
+	parseable_packet( HEADER_CZ_REQ_STYLE_CHANGE3, sizeof( PACKET_CZ_REQ_STYLE_CHANGE3 ), clif_parse_stylist_buy, 0 );
+#endif
+
 #if PACKETVER_MAIN_NUM >= 20181002 || PACKETVER_RE_NUM >= 20181002 || PACKETVER_ZERO_NUM >= 20181010
 	parseable_packet( HEADER_CZ_USE_SKILL_START, sizeof( struct PACKET_CZ_USE_SKILL_START ), clif_parse_StartUseSkillToId, 0 );
 	parseable_packet( HEADER_CZ_USE_SKILL_END, sizeof( struct PACKET_CZ_USE_SKILL_END ), clif_parse_StopUseSkillToId, 0 );

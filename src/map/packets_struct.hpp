@@ -2303,6 +2303,24 @@ struct PACKET_CZ_REQ_STYLE_CHANGE2 {
 	int16 BodyStyle;
 } __attribute__((packed));
 
+// kRO 2024+ stylist apply packet — same layout as CHANGE2 plus 3 int16
+// reserved fields whose meaning is not yet identified. We accept the
+// packet so the client doesn't disconnect on Apply, and only process
+// the fields that match CHANGE2.
+struct PACKET_CZ_REQ_STYLE_CHANGE3 {
+	int16 PacketType;
+	int16 HeadPalette;
+	int16 HeadStyle;
+	int16 BodyPalette;
+	int16 TopAccessory;
+	int16 MidAccessory;
+	int16 BottomAccessory;
+	int16 BodyStyle;
+	int16 reserved1;
+	int16 reserved2;
+	int16 reserved3;
+} __attribute__((packed));
+
 struct PACKET_ZC_STYLE_CHANGE_RES {
 	int16 PacketType;
 	int8 flag;
