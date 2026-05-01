@@ -16,7 +16,7 @@
 //= 2.0 Added 4th class [Lemongrass]
 //============================================================
 
-prontera,153,193,6	script	Job Master	123,{
+prt_in,38,104,4	script	Valerie - Job Master	811,{
 function Get_Job_Equip;
 // Checks if the Player has the required level.
 // closes if not, returns if yes
@@ -500,7 +500,7 @@ function	Get_Job_Equip	{
 
 OnInit:
 	// Initialisation, do not edit these
-	.NPCName$ = "[Job Master]";
+	.NPCName$ = "[Valerie - Job Master]";
 	
 	// Settings
 	.FourthClass = false;				// Disabled — Episódio 17.1 lockdown
