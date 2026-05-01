@@ -63,7 +63,9 @@ Expanded Super Novice: EXSUPNOV_Q -> job_super2
 
 // Main NPCs :: job_repair
 //============================================================
-prt_in,38,104,4	script	Valerie	811,{
+// DimensionsRO: Valerie disabled — Job Master takes this spot/sprite.
+// Duplicates Valerie#sign at other cities still active for job-var repair.
+-	script	Valerie#disabled	-1,{
 	if (checkweight(1201,1) == 0) {
 		mes "I think you have too many items. Let's try it again after you take some out.";
 		close;
