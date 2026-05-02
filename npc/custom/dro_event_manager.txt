@@ -4,20 +4,22 @@
 // definido. Salva baseline ao boot e reverte automaticamente via timer.
 //
 // Uso (GM in-game):
-//   @event exp <multiplicador> <horas>     // ex: @event exp 10 4  (10x por 4h)
-//   @event drop <multiplicador> <horas>    // ex: @event drop 5 2
-//   @event all <multiplicador> <horas>     // exp+drop juntos
-//   @event off                             // encerra eventos ativos imediatamente
-//   @event status                          // mostra estado atual
+//   @event exp <pct> <horas>       // ex: @event exp 150 4   (1.5x = +50% por 4h)
+//   @event drop <pct> <horas>      // ex: @event drop 200 2  (2x = +100% por 2h)
+//   @event all <pct> <horas>       // exp+drop juntos no mesmo pct
+//   @event off                     // encerra eventos ativos imediatamente
+//   @event status                  // mostra estado atual
 //
-// Multiplicador é um FATOR sobre o baseline (ex: 2 = dobro do rate atual).
+// <pct> é a taxa ABSOLUTA em centesimal (100 = 1x = sem mudanca).
+// Exemplos: 150 = 1.5x (+50%), 200 = 2x (+100%), 1000 = 10x (+900%).
+// Range: 50 (-50%) a 10000 (100x).
+// Substitui o baseline atual; ao encerrar, restaura ao baseline do boot.
 // =============================================================================
 
 -	script	dro_event_mgr	-1,{
 	end;
 
 OnInit:
-	// Captura baseline ao boot do servidor.
 	$@dro_evt_base_exp     = getbattleflag("base_exp_rate");
 	$@dro_evt_base_job     = getbattleflag("job_exp_rate");
 	$@dro_evt_base_quest   = getbattleflag("quest_exp_rate");
@@ -37,10 +39,10 @@ OnAtcommand:
 	if (.@sub$ == "status") goto L_Status;
 
 	if (.@atcmd_numparameters < 3) goto L_Help;
-	.@mult = atoi(.@atcmd_parameters$[1]);
+	.@pct = atoi(.@atcmd_parameters$[1]);
 	.@hours = atoi(.@atcmd_parameters$[2]);
-	if (.@mult < 1 || .@mult > 100) {
-		dispbottom "[event] Multiplicador invalido (1-100).";
+	if (.@pct < 50 || .@pct > 10000) {
+		dispbottom "[event] Taxa invalida (50 a 10000). Ex: 150 = +50%, 200 = 2x.";
 		end;
 	}
 	if (.@hours < 1 || .@hours > 168) {
@@ -50,23 +52,24 @@ OnAtcommand:
 
 	if (.@sub$ != "exp" && .@sub$ != "drop" && .@sub$ != "all") goto L_Help;
 
-	if (.@sub$ == "exp" || .@sub$ == "all") callsub L_StartExp, .@mult;
-	if (.@sub$ == "drop" || .@sub$ == "all") callsub L_StartDrop, .@mult;
+	if (.@sub$ == "exp" || .@sub$ == "all") callsub L_StartExp, .@pct;
+	if (.@sub$ == "drop" || .@sub$ == "all") callsub L_StartDrop, .@pct;
 
 	$dro_evt_until = gettimetick(2) + (.@hours * 3600);
-	$dro_evt_mult  = .@mult;
+	$dro_evt_pct   = .@pct;
 	$dro_evt_kind$ = .@sub$;
 
-	.@eff_exp  = (.@mult * $@dro_evt_base_exp)    / 100;
-	.@eff_drop = (.@mult * $@dro_evt_base_common) / 100;
 	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
+	.@xstr$ = callfunc("F_DroFmtRate", .@pct);
+	.@delta = .@pct - 100;
+	.@delta$ = (.@delta >= 0) ? ("+" + .@delta + "%") : (.@delta + "%");
 
 	if (.@sub$ == "exp")
-		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP agora em " + .@eff_exp + "x pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Bom farm!";
 	else if (.@sub$ == "drop")
-		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops agora em " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Bom farm!";
 	else
-		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP " + .@eff_exp + "x e Drops " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Aproveitem!";
+		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP e Drops em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Aproveitem!";
 
 	announce .@msg$, bc_all|bc_blue;
 	dispbottom "[event] " + .@msg$;
@@ -75,17 +78,17 @@ OnAtcommand:
 	end;
 
 L_StartExp:
-	setbattleflag "base_exp_rate",  getarg(0) * $@dro_evt_base_exp;
-	setbattleflag "job_exp_rate",   getarg(0) * $@dro_evt_base_job;
-	setbattleflag "quest_exp_rate", getarg(0) * $@dro_evt_base_quest;
+	setbattleflag "base_exp_rate",  getarg(0);
+	setbattleflag "job_exp_rate",   getarg(0);
+	setbattleflag "quest_exp_rate", getarg(0);
 	return;
 
 L_StartDrop:
-	setbattleflag "item_rate_common", getarg(0) * $@dro_evt_base_common;
-	setbattleflag "item_rate_heal",   getarg(0) * $@dro_evt_base_heal;
-	setbattleflag "item_rate_use",    getarg(0) * $@dro_evt_base_use;
-	setbattleflag "item_rate_equip",  getarg(0) * $@dro_evt_base_equip;
-	// Cards NAO entram no boost (cap continua 1%).
+	setbattleflag "item_rate_common", getarg(0);
+	setbattleflag "item_rate_heal",   getarg(0);
+	setbattleflag "item_rate_use",    getarg(0);
+	setbattleflag "item_rate_equip",  getarg(0);
+	// Cards NAO entram no boost (cap item_drop_card_max=100 continua valendo).
 	return;
 
 OnTimer60000:
@@ -94,7 +97,7 @@ OnTimer60000:
 		callsub L_RestoreAll;
 		announce "Evento encerrado. Taxas voltaram ao normal. Obrigado por jogar!", bc_all|bc_blue;
 		$dro_evt_until = 0;
-		$dro_evt_mult  = 0;
+		$dro_evt_pct   = 0;
 		$dro_evt_kind$ = "";
 		stopnpctimer;
 		end;
@@ -120,26 +123,40 @@ L_Off:
 	callsub L_RestoreAll;
 	announce "Evento encerrado antecipadamente pela administracao. Taxas voltaram ao normal.", bc_all|bc_blue;
 	$dro_evt_until = 0;
-	$dro_evt_mult  = 0;
+	$dro_evt_pct   = 0;
 	$dro_evt_kind$ = "";
 	stopnpctimer;
 	end;
 
 L_Status:
 	if ($dro_evt_until == 0) {
-		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + ($@dro_evt_base_exp/100) + "x drop=" + ($@dro_evt_base_common/100) + "x";
+		.@bex$ = callfunc("F_DroFmtRate", $@dro_evt_base_exp);
+		.@bdr$ = callfunc("F_DroFmtRate", $@dro_evt_base_common);
+		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + .@bex$ + " drop=" + .@bdr$;
 		end;
 	}
 	.@rem = $dro_evt_until - gettimetick(2);
-	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " x" + $dro_evt_mult + ", " + (.@rem/60) + "min restantes";
+	.@xstr$ = callfunc("F_DroFmtRate", $dro_evt_pct);
+	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " " + .@xstr$ + " (" + $dro_evt_pct + "%), " + (.@rem/60) + "min restantes";
 	end;
 
 L_Help:
 	dispbottom "[event] Uso:";
-	dispbottom "  @event exp <mult> <horas>     - boost EXP (base/job/quest)";
-	dispbottom "  @event drop <mult> <horas>    - boost drops (sem cards)";
-	dispbottom "  @event all <mult> <horas>     - exp+drop juntos";
+	dispbottom "  @event exp <pct> <horas>      - boost EXP (100=1x, 150=+50%, 200=2x)";
+	dispbottom "  @event drop <pct> <horas>     - boost drops (sem cards)";
+	dispbottom "  @event all <pct> <horas>      - exp+drop juntos";
 	dispbottom "  @event off                    - encerra evento ativo";
 	dispbottom "  @event status                 - mostra estado";
 	end;
+}
+
+// Helper — formata pct (centesimal) como "1x", "1.5x", "10x" etc.
+function	script	F_DroFmtRate	{
+	.@pct = getarg(0);
+	.@whole = .@pct / 100;
+	.@frac = .@pct % 100;
+	if (.@frac == 0) return .@whole + "x";
+	if (.@frac % 10 == 0) return .@whole + "." + (.@frac / 10) + "x";
+	if (.@frac < 10) return .@whole + ".0" + .@frac + "x";
+	return .@whole + "." + .@frac + "x";
 }
