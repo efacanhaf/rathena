@@ -17,9 +17,10 @@
 // =============================================================================
 
 // === EXP ===
-base_exp_rate: 500
-job_exp_rate: 500
-quest_exp_rate: 300
+// Base 10x (era 5x — dobrado em 2026-05-02)
+base_exp_rate: 1000
+job_exp_rate: 1000
+quest_exp_rate: 600
 
 // === Common items (potions, materials) ===
 item_rate_common: 500
