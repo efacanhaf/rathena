@@ -37,8 +37,8 @@ OnInit:
 
 	// Se restartou dentro da janela do fim de semana, retoma o flag.
 	if ($dro_wkn_exp > 0 || $dro_wkn_drop > 0) {
-		.@wd = gettime(GETTIME_WEEKDAY);
-		.@h  = gettime(GETTIME_HOUR);
+		.@wd = gettime(DT_DAYOFWEEK);
+		.@h  = gettime(DT_HOUR);
 		if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3))
 			$dro_wkn_on = 1;
 		else
@@ -229,8 +229,8 @@ L_Weekend:
 	$dro_wkn_drop = .@wdrop;
 
 	// Se ja estamos dentro da janela, ativa agora.
-	.@wd = gettime(GETTIME_WEEKDAY);
-	.@h  = gettime(GETTIME_HOUR);
+	.@wd = gettime(DT_DAYOFWEEK);
+	.@h  = gettime(DT_HOUR);
 	if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) {
 		$dro_wkn_on = 1;
 		callsub L_ApplyRates;
