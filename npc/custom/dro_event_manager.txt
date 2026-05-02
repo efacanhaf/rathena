@@ -10,8 +10,7 @@
 //   @event off                             // encerra eventos ativos imediatamente
 //   @event status                          // mostra estado atual
 //
-// Multiplicador é ABSOLUTO (ex: 10 = 10x flat). Independente do baseline atual.
-// Ao encerrar, o NPC restaura o baseline capturado no boot do servidor.
+// Multiplicador é um FATOR sobre o baseline (ex: 2 = dobro do rate atual).
 // =============================================================================
 
 -	script	dro_event_mgr	-1,{
@@ -68,17 +67,16 @@ L_Schedule:
 	end;
 
 L_StartExp:
-	// Multiplicador é ABSOLUTO (ex: 10 = 10x flat, ignora baseline).
-	setbattleflag "base_exp_rate",  getarg(0) * 100;
-	setbattleflag "job_exp_rate",   getarg(0) * 100;
-	setbattleflag "quest_exp_rate", getarg(0) * 100;
+	setbattleflag "base_exp_rate",  getarg(0) * $@dro_evt_base_exp;
+	setbattleflag "job_exp_rate",   getarg(0) * $@dro_evt_base_job;
+	setbattleflag "quest_exp_rate", getarg(0) * $@dro_evt_base_quest;
 	return;
 
 L_StartDrop:
-	setbattleflag "item_rate_common", getarg(0) * 100;
-	setbattleflag "item_rate_heal",   getarg(0) * 100;
-	setbattleflag "item_rate_use",    getarg(0) * 100;
-	setbattleflag "item_rate_equip",  getarg(0) * 100;
+	setbattleflag "item_rate_common", getarg(0) * $@dro_evt_base_common;
+	setbattleflag "item_rate_heal",   getarg(0) * $@dro_evt_base_heal;
+	setbattleflag "item_rate_use",    getarg(0) * $@dro_evt_base_use;
+	setbattleflag "item_rate_equip",  getarg(0) * $@dro_evt_base_equip;
 	// Cards NAO entram no boost (cap continua 1%).
 	return;
 
