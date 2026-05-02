@@ -60,16 +60,15 @@ OnAtcommand:
 	$dro_evt_kind$ = .@sub$;
 
 	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
-	.@xstr$ = callfunc("F_DroFmtRate", .@pct);
-	.@delta = .@pct - 100;
-	.@delta$ = (.@delta >= 0) ? ("+" + .@delta + "%") : (.@delta + "%");
+	.@boost = .@pct - 100;
+	.@rate$ = .@pct + "% (100% base + " + .@boost + "% evento)";
 
 	if (.@sub$ == "exp")
-		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else if (.@sub$ == "drop")
-		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else
-		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP e Drops em " + .@xstr$ + " (" + .@delta$ + ") pelas proximas " + .@dur$ + ". Aproveitem!";
+		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP e Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Aproveitem!";
 
 	announce .@msg$, bc_all|bc_blue;
 	dispbottom "[event] " + .@msg$;
@@ -130,14 +129,12 @@ L_Off:
 
 L_Status:
 	if ($dro_evt_until == 0) {
-		.@bex$ = callfunc("F_DroFmtRate", $@dro_evt_base_exp);
-		.@bdr$ = callfunc("F_DroFmtRate", $@dro_evt_base_common);
-		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + .@bex$ + " drop=" + .@bdr$;
+		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + $@dro_evt_base_exp + "% drop=" + $@dro_evt_base_common + "%";
 		end;
 	}
 	.@rem = $dro_evt_until - gettimetick(2);
-	.@xstr$ = callfunc("F_DroFmtRate", $dro_evt_pct);
-	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " " + .@xstr$ + " (" + $dro_evt_pct + "%), " + (.@rem/60) + "min restantes";
+	.@boost = $dro_evt_pct - 100;
+	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " " + $dro_evt_pct + "% (100% base + " + .@boost + "% evento), " + (.@rem/60) + "min restantes";
 	end;
 
 L_Help:
@@ -150,13 +147,3 @@ L_Help:
 	end;
 }
 
-// Helper — formata pct (centesimal) como "1x", "1.5x", "10x" etc.
-function	script	F_DroFmtRate	{
-	.@pct = getarg(0);
-	.@whole = .@pct / 100;
-	.@frac = .@pct % 100;
-	if (.@frac == 0) return .@whole + "x";
-	if (.@frac % 10 == 0) return .@whole + "." + (.@frac / 10) + "x";
-	if (.@frac < 10) return .@whole + ".0" + .@frac + "x";
-	return .@whole + "." + .@frac + "x";
-}
