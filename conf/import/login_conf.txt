@@ -1,0 +1,11 @@
+// DimensionsRO local overrides for login_athena.conf
+
+// Server-side MD5 is OFF because the Ragexe client is patched (NEMO
+// "Use MD5 hashing"), so it already sends MD5(password) on the wire.
+// The Discord registration bot inserts MD5(password) directly into
+// login.user_pass, so the comparison matches without a second hashing pass.
+// Result: at-rest is MD5, in-transit is MD5 — no plaintext anywhere.
+//
+// Enabling use_MD5_passwords would cause the server to reject MD5-mode
+// clients with "Rejected from server" (see loginclif.cpp:312-315).
+use_MD5_passwords: yes

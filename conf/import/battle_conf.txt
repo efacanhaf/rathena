@@ -1,0 +1,64 @@
+// =============================================================================
+// DimensionsRO — battle config overrides (Phase 5 — drop & exp rate baseline)
+// =============================================================================
+// Philosophy: mid-rate baseline that leaves headroom for EXP/drop EVENTS
+// (weekend/anniversary boosts) without trivializing the grind.
+//
+// Baseline pace estimates:
+//   - Lvl 1-99 (Trans):           ~6-8h     (5x base/job exp)
+//   - Lvl 99 -> 175 (3rd class):  ~24-32h
+//   - Total to max level:         ~30-40h casual play
+//
+// Event multipliers (applied via @addrate or NPC) lift this to:
+//   - Weekend +5x event:    effective 10x base, ~18h max level
+//   - Anniversary +10x:     effective 15x base, ~12h max level
+//
+// Cards: 100x normal/boss (~1%), 10x MVP (~0.1%). Eduardo's target rate.
+// =============================================================================
+
+// === EXP ===
+base_exp_rate: 500
+job_exp_rate: 500
+quest_exp_rate: 300
+
+// === Common items (potions, materials) ===
+item_rate_common: 500
+item_rate_common_boss: 500
+item_rate_common_mvp: 1000
+
+// === Heal / Use (consumables) ===
+item_rate_heal: 500
+item_rate_heal_boss: 500
+item_rate_heal_mvp: 1000
+item_rate_use: 500
+item_rate_use_boss: 500
+item_rate_use_mvp: 1000
+
+// === Equip (weapons, armor, accessories) ===
+item_rate_equip: 500
+item_rate_equip_boss: 1000
+item_rate_equip_mvp: 1500
+
+// === Cards ===
+// Cap absoluto em 1% (item_drop_card_max=100) — nenhuma carta passa de 1%,
+// mesmo com multiplier alto. Cartas raras ficam abaixo de 1% naturalmente.
+item_rate_card: 10000
+item_rate_card_boss: 10000
+item_rate_card_mvp: 1000
+item_drop_card_min: 1
+item_drop_card_max: 100
+
+// === MVP-specific drops (Old Card Album, Old Violet Box, etc) ===
+item_rate_mvp: 300
+
+// === Treasure (WoE — secondary scope) ===
+item_rate_treasure: 300
+
+// === Add drops (script-injected) ===
+item_rate_adddrop: 500
+
+// === Stat caps — Ep 17.1 server (no 4th classes) ===
+// iRO oficial 3rd class cap = 120. rAthena default 130 assume 4th class progression.
+// Travado em 120 pra match experiência canônica 17.1.
+max_third_parameter: 120
+max_third_trans_parameter: 120

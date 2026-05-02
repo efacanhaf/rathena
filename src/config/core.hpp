@@ -49,13 +49,13 @@
 #define HP_SP_TABLES
 
 /// Uncomment to enable VIP system.
-//#define VIP_ENABLE
+#define VIP_ENABLE
 
 /// Enable VIP script changes? (requires VIP_ENABLE)
 /// The primary effects of this are restrictions on non-VIP players, such as requiring
 /// a Reset Stone to change into third classes, paying more for equipment upgrades, and
 /// so forth. Note that the changes are based on euRO, not iRO.
-#define VIP_SCRIPT 0
+#define VIP_SCRIPT 1
 
 #ifdef VIP_ENABLE
 	#ifndef MIN_STORAGE
