@@ -48,30 +48,28 @@ OnAtcommand:
 		end;
 	}
 
-	if (.@sub$ == "exp")  { callsub L_StartExp,  .@mult, .@hours; goto L_Schedule; }
-	if (.@sub$ == "drop") { callsub L_StartDrop, .@mult, .@hours; goto L_Schedule; }
-	if (.@sub$ == "all")  {
-		callsub L_StartExp,  .@mult, .@hours;
-		callsub L_StartDrop, .@mult, .@hours;
-		goto L_Schedule;
-	}
-	goto L_Help;
+	if (.@sub$ != "exp" && .@sub$ != "drop" && .@sub$ != "all") goto L_Help;
 
-L_Schedule:
+	if (.@sub$ == "exp" || .@sub$ == "all") callsub L_StartExp, .@mult;
+	if (.@sub$ == "drop" || .@sub$ == "all") callsub L_StartDrop, .@mult;
+
 	$dro_evt_until = gettimetick(2) + (.@hours * 3600);
 	$dro_evt_mult  = .@mult;
 	$dro_evt_kind$ = .@sub$;
-	// Calcula a rate efetiva pra mostrar no anuncio.
+
 	.@eff_exp  = (.@mult * $@dro_evt_base_exp)    / 100;
 	.@eff_drop = (.@mult * $@dro_evt_base_common) / 100;
 	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
-	if (.@sub$ == "exp") {
-		announce "*** EVENTO DE EXP ATIVADO! *** EXP agora em " + .@eff_exp + "x pelas proximas " + .@dur$ + ". Bom farm!", bc_all|bc_blue;
-	} else if (.@sub$ == "drop") {
-		announce "*** EVENTO DE DROP ATIVADO! *** Drops agora em " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Bom farm!", bc_all|bc_blue;
-	} else {
-		announce "*** EVENTO DE EXP + DROP ATIVADO! *** EXP " + .@eff_exp + "x e Drops " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Aproveitem!", bc_all|bc_blue;
-	}
+
+	if (.@sub$ == "exp")
+		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP agora em " + .@eff_exp + "x pelas proximas " + .@dur$ + ". Bom farm!";
+	else if (.@sub$ == "drop")
+		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops agora em " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Bom farm!";
+	else
+		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP " + .@eff_exp + "x e Drops " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Aproveitem!";
+
+	announce .@msg$, bc_all|bc_blue;
+	dispbottom "[event] " + .@msg$;
 	stopnpctimer;
 	initnpctimer;
 	end;
