@@ -22849,17 +22849,56 @@ void clif_stylist_response( map_session_data* sd, bool failed ){
 #endif
 }
 
-bool clif_parse_stylist_buy_sub( map_session_data* sd, _look look, int16 index ){
+// dry_run==true validates only (no zeny/item changes); dry_run==false commits.
+// lookup_by_value==true means `key` is the actual look value (e.g. hair_color=8)
+// and we must scan entries to find the matching one — kRO 2024+ stylist
+// (0x0bf7) sends values, not indexes. Older packets (0x0a46/0x0afc) send
+// indexes and use lookup_by_value==false.
+bool clif_parse_stylist_buy_sub( map_session_data* sd, _look look, int16 key, bool dry_run, bool lookup_by_value ){
 	std::shared_ptr<s_stylist_list> list = stylist_db.find( look );
 
 	if( list == nullptr ){
-		return false;
+		// kRO 2024+ stylist UI sends current values for all categories
+		// (not just the changed one). Treat "look not configured" as a
+		// silent no-op so apply doesn't fail when one category is unset.
+		return true;
 	}
 
-	std::shared_ptr<s_stylist_entry> entry = util::umap_find( list->entries, index );
+	std::shared_ptr<s_stylist_entry> entry;
+	if( lookup_by_value ){
+		for( const auto& [idx, e] : list->entries ){
+			if( (int16)e->value == key ){
+				entry = e;
+				break;
+			}
+		}
+	}else{
+		entry = util::umap_find( list->entries, key );
+	}
 
 	if( entry == nullptr ){
-		return false;
+		// Same reasoning as above: outside the configured options
+		// (e.g., the player's already-equipped accessory id is sent
+		// verbatim) should be ignored, not fail the apply.
+		return true;
+	}
+
+	// kRO 2024+ stylist UI sends the player's current value for every
+	// category they navigated since opening the window, so an Apply that
+	// "only changes color" still ships the persisted hair style, clothes
+	// color, etc. Compare against the player's actual look — if it
+	// matches, this is a no-op (no zeny/item should be charged).
+	int16 current_look = -1;
+	switch( look ){
+		case LOOK_HAIR:          current_look = sd->status.hair; break;
+		case LOOK_HAIR_COLOR:    current_look = sd->status.hair_color; break;
+		case LOOK_CLOTHES_COLOR: current_look = sd->status.clothes_color; break;
+		case LOOK_BODY2:         current_look = sd->status.body; break;
+		// LOOK_HEAD_TOP/MID/BOTTOM are mailed items, not stored as a
+		// "current look" we can compare against — always process those.
+	}
+	if( current_look != -1 && (int16)entry->value == current_look ){
+		return true;
 	}
 
 	std::shared_ptr<s_stylist_costs> costs;
@@ -22905,6 +22944,11 @@ bool clif_parse_stylist_buy_sub( map_session_data* sd, _look look, int16 index )
 		}
 	}
 
+	if( dry_run ){
+		// Pre-flight only: do not consume zeny/items or change look.
+		return true;
+	}
+
 	if( inventoryIndex >= 0 && pc_delitem( sd, inventoryIndex, 1, 0, 0, LOG_TYPE_OTHER ) != 0 ){
 		return false;
 	}
@@ -22948,53 +22992,168 @@ bool clif_parse_stylist_buy_sub( map_session_data* sd, _look look, int16 index )
 
 void clif_parse_stylist_buy( int32 fd, map_session_data* sd ){
 #if PACKETVER >= 20151104
+	// kRO 2024+ uses 0x0bf7 (CZ_REQ_STYLE_CHANGE3, variable-length); older
+	// clients use 0x0a46 (CHANGE) or 0x0afc (CHANGE2).
+	int16 HeadPalette = 0, HeadStyle = 0, BodyPalette = 0, TopAccessory = 0, MidAccessory = 0, BottomAccessory = 0, BodyStyle = 0;
+	uint16 cmd = RFIFOW( fd, 0 );
+	if( cmd == HEADER_CZ_REQ_STYLE_CHANGE3 ){
+		// Variable-length 0x0bf7 layout (reverse-engineered from dumps):
+		//   header(2) + length(2) + count(2) + records[count] of 8 bytes
+		// Each record is 4 int16: [category, 0, value, 0]
+		// kRO category enum (NOT rAthena _look):
+		//   0=hair color (palette value), 1=hair style (palette value),
+		//   2=clothes color (palette value),
+		//   3=head top accessory (UI slot index),
+		//   4=head mid accessory (UI slot index),
+		//   5=head bottom accessory (UI slot index)
+		uint16 plen = RFIFOW( fd, 2 );
+		uint16 count = RFIFOW( fd, 4 );
+		uint16 ofs = 6;
+		for( uint16 i = 0; i < count && (uint32)ofs + 8 <= plen; i++ ){
+			int16 category = RFIFOW( fd, ofs );
+			int16 value = RFIFOW( fd, ofs + 4 );
+			switch( category ){
+				case 0: HeadPalette     = value; break;
+				case 1: HeadStyle       = value; break;
+				case 2: BodyPalette     = value; break;
+				case 3: TopAccessory    = value; break;
+				case 4: MidAccessory    = value; break;
+				case 5: BottomAccessory = value; break;
+				case 9: BodyStyle       = value; break;  // Costume Change (alt body sprite)
+				default: break;
+			}
+			ofs += 8;
+		}
+	}else{
 #if PACKETVER >= 20180516
-	const PACKET_CZ_REQ_STYLE_CHANGE2* p = reinterpret_cast<PACKET_CZ_REQ_STYLE_CHANGE2*>( RFIFOP( fd, 0 ) );
+		const PACKET_CZ_REQ_STYLE_CHANGE2* p = reinterpret_cast<PACKET_CZ_REQ_STYLE_CHANGE2*>( RFIFOP( fd, 0 ) );
+		BodyStyle = p->BodyStyle;
 #else
-	const PACKET_CZ_REQ_STYLE_CHANGE* p = reinterpret_cast<PACKET_CZ_REQ_STYLE_CHANGE*>( RFIFOP( fd, 0 ) );
+		const PACKET_CZ_REQ_STYLE_CHANGE* p = reinterpret_cast<PACKET_CZ_REQ_STYLE_CHANGE*>( RFIFOP( fd, 0 ) );
+		BodyStyle = 0;
 #endif
-	if( p->HeadPalette != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_HAIR_COLOR, p->HeadPalette ) ){
-		clif_stylist_response( sd, true );
-		return;
+		HeadPalette     = p->HeadPalette;
+		HeadStyle       = p->HeadStyle;
+		BodyPalette     = p->BodyPalette;
+		TopAccessory    = p->TopAccessory;
+		MidAccessory    = p->MidAccessory;
+		BottomAccessory = p->BottomAccessory;
+	}
+	// Two-pass: validate everything first, then commit. Avoids consuming
+	// zeny/items when a later sub fails (kRO 2024+ UI sends current
+	// values for all categories, so partial-success would charge for
+	// styles the player didn't ask to change).
+	//
+	// lookup_by_value differs per-look on 0x0bf7:
+	//   - paletas (hair color/style, clothes color): the packet field is
+	//     the actual palette VALUE; sub must scan stylist.yml entries
+	//     for one whose Value matches.
+	//   - accessories (top/mid/bottom): the packet field is the UI slot
+	//     INDEX into stylist.yml; sub looks up entries[index] directly.
+	// On legacy packets (0x0a46/0x0afc) every field is an INDEX.
+	const bool packet_is_new = (cmd == HEADER_CZ_REQ_STYLE_CHANGE3);
+	struct { _look look; int16 key; bool by_value; } changes[] = {
+		{ LOOK_HAIR_COLOR,    HeadPalette,     packet_is_new },
+		{ LOOK_HAIR,          HeadStyle,       packet_is_new },
+		{ LOOK_CLOTHES_COLOR, BodyPalette,     packet_is_new },
+		{ LOOK_HEAD_TOP,      TopAccessory,    false },
+		{ LOOK_HEAD_MID,      MidAccessory,    false },
+		{ LOOK_HEAD_BOTTOM,   BottomAccessory, false },
+	};
+
+	// Pass 1: validate (no side effects).
+	for( const auto& c : changes ){
+		if( c.key != 0 && !clif_parse_stylist_buy_sub( sd, c.look, c.key, true, c.by_value ) ){
+			clif_stylist_response( sd, true );
+			return;
+		}
 	}
 
-	if( p->HeadStyle != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_HAIR, p->HeadStyle ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
-
-	if( p->BodyPalette != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_CLOTHES_COLOR, p->BodyPalette ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
-
-	if( p->TopAccessory != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_HEAD_TOP, p->TopAccessory ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
-
-	if( p->MidAccessory != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_HEAD_MID, p->MidAccessory ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
-
-	if( p->BottomAccessory != 0 && !clif_parse_stylist_buy_sub( sd, LOOK_HEAD_BOTTOM, p->BottomAccessory ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
-
+	// Body Style ("Costume Change") gating. The kRO 2024+ stylist UI exposes
+	// the full per-class alt body sprite range (~50+ values), but the
+	// rAthena stylist DB only ships a couple of generic entries — looking
+	// up by index would mostly fail. For the new packet, bypass the DB
+	// and apply BodyStyle directly. Legacy packets keep the original
+	// DB-driven path with the class checks.
+	int16 body2_ticket_index = -1;
+	if( BodyStyle != 0 ){
 #if PACKETVER >= 20231220
-	if( p->BodyStyle != 0 ){
-		// TODO: Unsupported for now => This is job specific now
-		clif_stylist_response( sd, true );
-		return;
-	}
+		if( !packet_is_new ){
+			// Legacy clients on this PACKETVER had no body2 support — keep failing.
+			clif_stylist_response( sd, true );
+			return;
+		}
+		if( ( sd->class_ & JOBL_THIRD ) == 0 || ( sd->class_ & JOBL_FOURTH ) != 0 ){
+			clif_stylist_response( sd, true );
+			return;
+		}
+		// Costume Change consumes 1 Costume_Ticket (id 6959) only when
+		// switching TO the alternate body. Toggling back to default is free.
+		{
+			std::shared_ptr<s_job_info> job = job_db.find( sd->status.class_ );
+			if( job != nullptr && !job->alternate_outfits.empty() ){
+				int16 alt_body = (int16)job->alternate_outfits[0];
+				if( sd->status.body != alt_body ){
+					body2_ticket_index = pc_search_inventory( sd, 6959 );
+					if( body2_ticket_index < 0 ){
+						clif_stylist_response( sd, true );
+						return;
+					}
+				}
+			}
+		}
 #elif PACKETVER >= 20180516
-	if( p->BodyStyle != 0 && ( sd->class_ & JOBL_THIRD ) != 0 && ( sd->class_ & JOBL_FOURTH ) == 0 && !clif_parse_stylist_buy_sub( sd, LOOK_BODY2, p->BodyStyle ) ){
-		clif_stylist_response( sd, true );
-		return;
-	}
+		if( ( sd->class_ & JOBL_THIRD ) == 0 || ( sd->class_ & JOBL_FOURTH ) != 0 ){
+			clif_stylist_response( sd, true );
+			return;
+		}
+		if( !packet_is_new && !clif_parse_stylist_buy_sub( sd, LOOK_BODY2, BodyStyle, true, false ) ){
+			clif_stylist_response( sd, true );
+			return;
+		}
 #endif
+	}
+
+	// Pass 2: commit.
+	for( const auto& c : changes ){
+		if( c.key != 0 && !clif_parse_stylist_buy_sub( sd, c.look, c.key, false, c.by_value ) ){
+			clif_stylist_response( sd, true );
+			return;
+		}
+	}
+
+	if( BodyStyle != 0 ){
+		if( packet_is_new ){
+			// kRO 2024+ Costume Change is a binary toggle between the
+			// job's default body (class_) and its alternate outfit
+			// (alternate_outfits[0]). The packet's value field is an
+			// opaque UI index; the client expects the raw class_id in
+			// the body field of unit packets (PACKETVER >= 20231220).
+			std::shared_ptr<s_job_info> job = job_db.find( sd->status.class_ );
+			if( job != nullptr && !job->alternate_outfits.empty() ){
+				int16 default_body = (int16)sd->status.class_;
+				int16 alt_body = (int16)job->alternate_outfits[0];
+				int16 new_body = ( sd->status.body == alt_body ) ? default_body : alt_body;
+				// Consume the Costume Change Ticket reserved in the gate
+				// (only set when toggling to alt). pc_delitem can fail if
+				// the slot was emptied between checks; bail without changing
+				// the body to keep the transaction atomic.
+				if( body2_ticket_index >= 0 ){
+					if( pc_delitem( sd, body2_ticket_index, 1, 0, 0, LOG_TYPE_OTHER ) != 0 ){
+						clif_stylist_response( sd, true );
+						return;
+					}
+				}
+				sd->status.body = new_body;
+				clif_changelook( sd, LOOK_BODY2, new_body );
+			}
+		}
+#if PACKETVER >= 20180516 && PACKETVER < 20231220
+		else if( ( sd->class_ & JOBL_THIRD ) != 0 && ( sd->class_ & JOBL_FOURTH ) == 0 ){
+			clif_parse_stylist_buy_sub( sd, LOOK_BODY2, BodyStyle, false, false );
+		}
+#endif
+	}
 
 	clif_stylist_response( sd, false );
 #endif

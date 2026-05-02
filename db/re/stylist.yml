@@ -309,6 +309,14 @@ Body:
         CostsDoram:
             RequiredItem: Clothing_Dye_Coupon2
             RequiredItemBox: CCloth_Dye_Coupon2_Box
+      - Index: 7
+        Value: 1
+        CostsHuman:
+            RequiredItem: Clothing_Dye_Coupon
+            RequiredItemBox: Cloth_Dye_Coupon_Box
+        CostsDoram:
+            RequiredItem: Clothing_Dye_Coupon
+            RequiredItemBox: Cloth_Dye_Coupon_Box
       - Index: 2
         Value: 2
         CostsHuman:
@@ -337,11 +345,6 @@ Body:
             RequiredItemBox: CCloth_Dye_Coupon_Box
       - Index: 6
         Value: 6
-        CostsHuman:
-            RequiredItem: Clothing_Dye_Coupon
-            RequiredItemBox: CCloth_Dye_Coupon_Box
-      - Index: 7
-        Value: 7
         CostsHuman:
             RequiredItem: Clothing_Dye_Coupon
             RequiredItemBox: CCloth_Dye_Coupon_Box

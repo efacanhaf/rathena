@@ -1925,11 +1925,12 @@
 	parseable_packet( HEADER_CZ_REQ_STYLE_CHANGE2, sizeof( PACKET_CZ_REQ_STYLE_CHANGE2 ), clif_parse_stylist_buy, 0 );
 #endif
 
-// kRO 2024+ stylist Apply uses 0x0bf7 (22 bytes) instead of 0x0afc (16 bytes).
-// Accept it so the client doesn't disconnect; we still process the original
-// 8 fields via clif_parse_stylist_buy (3 trailing int16 are ignored).
+// kRO 2024+ stylist Apply: variable-length packet 0x0bf7. Length lives at
+// offset 2 (after the packetType). Confirmed 22 bytes total in observed
+// dump. Register as -1 (var-length sentinel); clif_parse_stylist_buy
+// dispatches by header to read CHANGE3 vs CHANGE2 layouts.
 #if PACKETVER >= 20211103
-	parseable_packet( HEADER_CZ_REQ_STYLE_CHANGE3, sizeof( PACKET_CZ_REQ_STYLE_CHANGE3 ), clif_parse_stylist_buy, 0 );
+	parseable_packet( HEADER_CZ_REQ_STYLE_CHANGE3, -1, clif_parse_stylist_buy, 0 );
 #endif
 
 #if PACKETVER_MAIN_NUM >= 20181002 || PACKETVER_RE_NUM >= 20181002 || PACKETVER_ZERO_NUM >= 20181010

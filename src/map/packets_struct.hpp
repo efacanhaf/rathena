@@ -2303,22 +2303,21 @@ struct PACKET_CZ_REQ_STYLE_CHANGE2 {
 	int16 BodyStyle;
 } __attribute__((packed));
 
-// kRO 2024+ stylist apply packet — same layout as CHANGE2 plus 3 int16
-// reserved fields whose meaning is not yet identified. We accept the
-// packet so the client doesn't disconnect on Apply, and only process
-// the fields that match CHANGE2.
+// kRO 2024+ stylist apply packet (0x0bf7), variable length. Each Apply
+// ships ONE change as a 5-int16 record: [version=1, category, 0, value, 0].
+// Categories observed (kRO enum, distinct from rAthena _look):
+//   0 = hair color, 1 = hair style, 2 = clothes color
+//   (3+ = body style / head accessories, mapping TBD from packet samples)
+// Multi-change Applies appear to repeat the 5-int16 block (22-byte
+// packets observed once with 2 blocks).
 struct PACKET_CZ_REQ_STYLE_CHANGE3 {
 	int16 PacketType;
-	int16 HeadPalette;
-	int16 HeadStyle;
-	int16 BodyPalette;
-	int16 TopAccessory;
-	int16 MidAccessory;
-	int16 BottomAccessory;
-	int16 BodyStyle;
-	int16 reserved1;
-	int16 reserved2;
-	int16 reserved3;
+	int16 PacketLength;
+	int16 version;     // always 0x0001 in observed dumps
+	int16 category;    // kRO category enum
+	int16 reserved_a;  // always 0
+	int16 value;       // new value to apply
+	int16 reserved_b;  // always 0
 } __attribute__((packed));
 
 struct PACKET_ZC_STYLE_CHANGE_RES {
