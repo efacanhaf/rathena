@@ -29,14 +29,24 @@ OnInit:
 	$@dro_evt_base_equip   = getbattleflag("item_rate_equip");
 	$@dro_evt_base_card    = getbattleflag("item_rate_card");
 	bindatcmd "event", strnpcinfo(3) + "::OnAtcommand", 60, 99;
+
+	// Se o servidor reiniciou dentro da janela de fim de semana, reativa o boost.
+	if ($dro_evt_weekend_exp > 0 || $dro_evt_weekend_drop > 0) {
+		.@wd = gettime(GETTIME_WEEKDAY);  // 0=Dom, 5=Sex, 6=Sab (UTC)
+		.@h  = gettime(GETTIME_HOUR);
+		if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) {
+			callsub L_StartWeekend;
+		}
+	}
 	end;
 
 OnAtcommand:
 	if (.@atcmd_numparameters < 1) goto L_Help;
 	.@sub$ = .@atcmd_parameters$[0];
 
-	if (.@sub$ == "off")    goto L_Off;
-	if (.@sub$ == "status") goto L_Status;
+	if (.@sub$ == "off")     goto L_Off;
+	if (.@sub$ == "status")  goto L_Status;
+	if (.@sub$ == "weekend") goto L_Weekend;
 
 	if (.@atcmd_numparameters < 3) goto L_Help;
 	.@pct = atoi(.@atcmd_parameters$[1]);
@@ -92,7 +102,8 @@ L_StartDrop:
 
 OnTimer60000:
 	if ($dro_evt_until == 0) { stopnpctimer; end; }
-	if (gettimetick(2) >= $dro_evt_until) {
+	// Weekend events ($dro_evt_until == -1) terminam via OnMon0300, nao por timer.
+	if ($dro_evt_until > 0 && gettimetick(2) >= $dro_evt_until) {
 		callsub L_RestoreAll;
 		announce "Evento encerrado. Taxas voltaram ao normal. Obrigado por jogar!", bc_all|bc_blue;
 		$dro_evt_until = 0;
@@ -139,11 +150,106 @@ L_Status:
 
 L_Help:
 	dispbottom "[event] Uso:";
-	dispbottom "  @event exp <pct> <horas>      - boost EXP (100=1x, 150=+50%, 200=2x)";
-	dispbottom "  @event drop <pct> <horas>     - boost drops (sem cards)";
-	dispbottom "  @event all <pct> <horas>      - exp+drop juntos";
-	dispbottom "  @event off                    - encerra evento ativo";
-	dispbottom "  @event status                 - mostra estado";
+	dispbottom "  @event exp <pct> <horas>           - boost EXP manual";
+	dispbottom "  @event drop <pct> <horas>          - boost drops manual (sem cards)";
+	dispbottom "  @event all <pct> <horas>           - exp+drop juntos";
+	dispbottom "  @event off                         - encerra evento ativo";
+	dispbottom "  @event status                      - mostra estado atual";
+	dispbottom "  @event weekend <exp> <drop>        - habilita evento auto Sex 19h-Seg 0h BRT";
+	dispbottom "  @event weekend off                 - desabilita evento auto";
+	dispbottom "  @event weekend status              - mostra config do auto";
+	end;
+
+// =============================================================================
+// Weekend auto event — Fri 19h to Mon 00h BRT (= Fri 22h UTC to Mon 03h UTC).
+// Server runs in UTC; OnFri2200 / OnMon0300 trigger.
+// =============================================================================
+L_Weekend:
+	if (.@atcmd_numparameters < 2) goto L_WeekendHelp;
+	.@arg$ = .@atcmd_parameters$[1];
+
+	if (.@arg$ == "off") {
+		$dro_evt_weekend_exp  = 0;
+		$dro_evt_weekend_drop = 0;
+		dispbottom "[event] Evento auto de fim de semana DESATIVADO.";
+		end;
+	}
+	if (.@arg$ == "status") {
+		if ($dro_evt_weekend_exp == 0 && $dro_evt_weekend_drop == 0) {
+			dispbottom "[event] Auto fim de semana: DESATIVADO.";
+		} else {
+			dispbottom "[event] Auto fim de semana: ATIVO. EXP " + $dro_evt_weekend_exp + "%, Drop " + $dro_evt_weekend_drop + "%.";
+			dispbottom "  Janela: Sex 19h - Seg 00h (Brasilia).";
+		}
+		end;
+	}
+
+	// "weekend <exp_pct> <drop_pct>"
+	if (.@atcmd_numparameters < 3) goto L_WeekendHelp;
+	.@wexp  = atoi(.@atcmd_parameters$[1]);
+	.@wdrop = atoi(.@atcmd_parameters$[2]);
+	if (.@wexp < 50 || .@wexp > 10000 || .@wdrop < 50 || .@wdrop > 10000) {
+		dispbottom "[event] Taxas invalidas (50-10000). Ex: weekend 200 200 = +100% exp +100% drop.";
+		end;
+	}
+	$dro_evt_weekend_exp  = .@wexp;
+	$dro_evt_weekend_drop = .@wdrop;
+	dispbottom "[event] Auto fim de semana CONFIGURADO: EXP " + .@wexp + "%, Drop " + .@wdrop + "%.";
+	dispbottom "  Vai ativar automaticamente Sex 19h e desativar Seg 00h (Brasilia).";
+
+	// Se ja estamos dentro da janela, ativa agora.
+	.@now = gettimetick(2);
+	.@wd  = gettime(GETTIME_WEEKDAY);  // 0=Dom, 5=Sex, 6=Sab (UTC server)
+	.@h   = gettime(GETTIME_HOUR);
+	if (((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) && $dro_evt_kind$ != "weekend") {
+		dispbottom "[event] Estamos dentro da janela do fim de semana — ativando agora.";
+		callsub L_StartWeekend;
+	}
+	end;
+
+L_WeekendHelp:
+	dispbottom "[event] Uso do auto fim de semana:";
+	dispbottom "  @event weekend <exp_pct> <drop_pct>   - habilita (ex: weekend 200 150)";
+	dispbottom "  @event weekend off                    - desabilita";
+	dispbottom "  @event weekend status                 - mostra config";
+	end;
+
+L_StartWeekend:
+	if ($dro_evt_weekend_exp == 0 && $dro_evt_weekend_drop == 0) return;
+	// Não sobrescreve evento manual em andamento
+	if ($dro_evt_until > 0 && $dro_evt_kind$ != "weekend") return;
+
+	if ($dro_evt_weekend_exp > 0) {
+		setbattleflag "base_exp_rate",  $dro_evt_weekend_exp;
+		setbattleflag "job_exp_rate",   $dro_evt_weekend_exp;
+		setbattleflag "quest_exp_rate", $dro_evt_weekend_exp;
+	}
+	if ($dro_evt_weekend_drop > 0) {
+		setbattleflag "item_rate_common", $dro_evt_weekend_drop;
+		setbattleflag "item_rate_heal",   $dro_evt_weekend_drop;
+		setbattleflag "item_rate_use",    $dro_evt_weekend_drop;
+		setbattleflag "item_rate_equip",  $dro_evt_weekend_drop;
+	}
+
+	$dro_evt_kind$ = "weekend";
+	$dro_evt_pct   = ($dro_evt_weekend_exp > 0) ? $dro_evt_weekend_exp : $dro_evt_weekend_drop;
+	$dro_evt_until = -1;  // sentinel: ends via OnMon0300, não por timer
+
+	.@msg$ = "*** EVENTO DE FIM DE SEMANA! *** EXP " + $dro_evt_weekend_exp + "% e Drops " + $dro_evt_weekend_drop + "% ate segunda-feira 00h. Bom farm!";
+	announce .@msg$, bc_all|bc_blue;
+	return;
+
+OnFri2200:
+	callsub L_StartWeekend;
+	end;
+
+OnMon0300:
+	if ($dro_evt_kind$ != "weekend") end;
+	callsub L_RestoreAll;
+	announce "Evento de fim de semana encerrado. Taxas voltaram ao normal. Boa semana!", bc_all|bc_blue;
+	$dro_evt_until = 0;
+	$dro_evt_pct   = 0;
+	$dro_evt_kind$ = "";
 	end;
 }
 
