@@ -5,21 +5,48 @@
 // Localizacoes default: Prontera, Izlude, Morroc.
 // =============================================================================
 
-prontera,156,191,4	script	Warper#dro_pront	1_F_LIBRARYGIRL,{
+// Posicoes baseadas no Euphy's Warper (npc/custom/warper.txt)
+prontera,159,192,4	script	Warper#dro	1_F_LIBRARYGIRL,{
 	callfunc "F_DroWarperMenu";
 }
 
-izlude,128,116,4	duplicate(Warper#dro_pront)	Warper#dro_izlu	1_F_LIBRARYGIRL
-morocc,159,98,4	duplicate(Warper#dro_pront)	Warper#dro_moroc	1_F_LIBRARYGIRL
-geffen,120,66,4	duplicate(Warper#dro_pront)	Warper#dro_geffen	1_F_LIBRARYGIRL
-payon,179,107,4	duplicate(Warper#dro_pront)	Warper#dro_payon	1_F_LIBRARYGIRL
-alberta,29,61,4	duplicate(Warper#dro_pront)	Warper#dro_alberta	1_F_LIBRARYGIRL
-aldebaran,140,131,4	duplicate(Warper#dro_pront)	Warper#dro_aldeb	1_F_LIBRARYGIRL
-yuno,158,125,4	duplicate(Warper#dro_pront)	Warper#dro_yuno	1_F_LIBRARYGIRL
-lighthalzen,162,98,4	duplicate(Warper#dro_pront)	Warper#dro_lhz	1_F_LIBRARYGIRL
-hugel,98,150,4	duplicate(Warper#dro_pront)	Warper#dro_hugel	1_F_LIBRARYGIRL
-rachel,118,135,4	duplicate(Warper#dro_pront)	Warper#dro_rachel	1_F_LIBRARYGIRL
-veins,217,124,4	duplicate(Warper#dro_pront)	Warper#dro_veins	1_F_LIBRARYGIRL
+alb2trea,57,70,6	duplicate(Warper#dro)	Warper#dro_tre	1_F_LIBRARYGIRL
+alberta,28,240,4	duplicate(Warper#dro)	Warper#dro_alb	1_F_LIBRARYGIRL
+aldebaran,145,118,4	duplicate(Warper#dro)	Warper#dro_alde	1_F_LIBRARYGIRL
+amatsu,203,87,4	duplicate(Warper#dro)	Warper#dro_ama	1_F_LIBRARYGIRL
+ayothaya,209,169,6	duplicate(Warper#dro)	Warper#dro_ayo	1_F_LIBRARYGIRL
+brasilis,201,222,4	duplicate(Warper#dro)	Warper#dro_bra	1_F_LIBRARYGIRL
+comodo,194,158,4	duplicate(Warper#dro)	Warper#dro_com	1_F_LIBRARYGIRL
+dewata,204,186,6	duplicate(Warper#dro)	Warper#dro_dew	1_F_LIBRARYGIRL
+einbech,59,38,6	duplicate(Warper#dro)	Warper#dro_einbe	1_F_LIBRARYGIRL
+einbroch,69,202,4	duplicate(Warper#dro)	Warper#dro_einbr	1_F_LIBRARYGIRL
+geffen,124,72,4	duplicate(Warper#dro)	Warper#dro_gef	1_F_LIBRARYGIRL
+gonryun,162,122,4	duplicate(Warper#dro)	Warper#dro_gon	1_F_LIBRARYGIRL
+hugel,101,151,4	duplicate(Warper#dro)	Warper#dro_hug	1_F_LIBRARYGIRL
+izlude,134,150,4	duplicate(Warper#dro)	Warper#dro_izl	1_F_LIBRARYGIRL
+jawaii,253,138,4	duplicate(Warper#dro)	Warper#dro_jaw	1_F_LIBRARYGIRL
+lasagna,196,187,4	duplicate(Warper#dro)	Warper#dro_las	1_F_LIBRARYGIRL
+lighthalzen,162,102,4	duplicate(Warper#dro)	Warper#dro_lhz	1_F_LIBRARYGIRL
+louyang,208,103,6	duplicate(Warper#dro)	Warper#dro_lou	1_F_LIBRARYGIRL
+malangdo,134,117,6	duplicate(Warper#dro)	Warper#dro_mal	1_F_LIBRARYGIRL
+malaya,231,204,4	duplicate(Warper#dro)	Warper#dro_maly	1_F_LIBRARYGIRL
+manuk,274,146,6	duplicate(Warper#dro)	Warper#dro_man	1_F_LIBRARYGIRL
+mid_camp,216,288,4	duplicate(Warper#dro)	Warper#dro_mid	1_F_LIBRARYGIRL
+moc_ruins,64,164,4	duplicate(Warper#dro)	Warper#dro_moc	1_F_LIBRARYGIRL
+mora,57,152,4	duplicate(Warper#dro)	Warper#dro_mora	1_F_LIBRARYGIRL
+morocc,159,97,4	duplicate(Warper#dro)	Warper#dro_mor	1_F_LIBRARYGIRL
+moscovia,229,191,4	duplicate(Warper#dro)	Warper#dro_mos	1_F_LIBRARYGIRL
+nameless_n,259,213,4	duplicate(Warper#dro)	Warper#dro_nam	1_F_LIBRARYGIRL
+niflheim,205,179,4	duplicate(Warper#dro)	Warper#dro_nif	1_F_LIBRARYGIRL
+pay_arche,42,134,4	duplicate(Warper#dro)	Warper#dro_arc	1_F_LIBRARYGIRL
+payon,182,108,4	duplicate(Warper#dro)	Warper#dro_pay	1_F_LIBRARYGIRL
+rachel,135,116,4	duplicate(Warper#dro)	Warper#dro_rac	1_F_LIBRARYGIRL
+splendide,205,153,4	duplicate(Warper#dro)	Warper#dro_spl	1_F_LIBRARYGIRL
+thor_camp,249,76,4	duplicate(Warper#dro)	Warper#dro_thor	1_F_LIBRARYGIRL
+umbala,106,150,3	duplicate(Warper#dro)	Warper#dro_umb	1_F_LIBRARYGIRL
+veins,214,123,4	duplicate(Warper#dro)	Warper#dro_ve	1_F_LIBRARYGIRL
+xmas,150,136,6	duplicate(Warper#dro)	Warper#dro_xmas	1_F_LIBRARYGIRL
+yuno,162,47,4	duplicate(Warper#dro)	Warper#dro_yuno	1_F_LIBRARYGIRL
 
 function	script	F_DroWarperMenu	{
 	mes "[Warper]";
