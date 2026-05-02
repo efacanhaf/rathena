@@ -20827,14 +20827,29 @@ void roulette_generate_bonus( map_session_data& sd ){
 		if( sd.roulette_point.bronze > 0 ){
 			next_stage = 0;
 		}else if( sd.roulette_point.silver > 9 ){
-			next_stage = 2;
+			next_stage = 3;
 		}else if( sd.roulette_point.gold > 9 ){
-			next_stage = 4;
+			next_stage = 5;
 		}
 
 		// Get bonus item stage only from current stage or higher
 		int32 reward_stage = rnd_value( next_stage, MAX_ROULETTE_LEVEL - 1 );
-		sd.roulette.bonusItemID = rd.nameid[reward_stage][rnd()%rd.items[reward_stage]];
+		// Exclude losing-tile columns (flag&1) — claiming the bonus only
+		// doubles the prize when the landed tile is not a loss, so a bonus
+		// that points at a losing-only item (e.g. the Silver_Coin column)
+		// can never be won. Build the list of non-losing columns and pick
+		// from those; fall back to a plain random pick if a level somehow
+		// has no non-losing entries (shouldn't happen with the default DB).
+		int32 candidates[MAX_ROULETTE_COLUMNS];
+		int32 candidate_count = 0;
+		for( int32 j = 0; j < rd.items[reward_stage]; j++ ){
+			if( !( rd.flag[reward_stage][j] & 1 ) ){
+				candidates[candidate_count++] = j;
+			}
+		}
+		int32 pick = ( candidate_count > 0 ) ? candidates[rnd()%candidate_count]
+		                                     : (int32)( rnd()%rd.items[reward_stage] );
+		sd.roulette.bonusItemID = rd.nameid[reward_stage][pick];
 	}else{
 		sd.roulette.bonusItemID = 0;
 	}
@@ -21037,33 +21052,86 @@ void clif_parse_roulette_generate( int32 fd, map_session_data* sd ){
 		return;
 	}
 
-	// Player has not claimed his prize yet
-	if( sd->roulette.claimPrize ){
+	// Per-tier coin costs (DimensionsRO tuning — bronze covers an extra row):
+	//   Stage 0-2 (rows 1-3) → 1 Bronze per spin.
+	//   Stage 3-4 (rows 4-5) → 1 Silver per spin.
+	//   Stage 5-6 (rows 6-7) → 1 Gold per spin.
+	// Skip-start (when fresh chain has no Bronze): 10 Silver opens at stage 3,
+	// 10 Gold opens at stage 5. The 10-coin payment covers that first spin
+	// in lieu of the 1-coin tier price.
+	//
+	// Auto-claim cases (the previous spin ended the chain):
+	//   - Stage was reset to 0 by the LOSING tile (consolation prize pending).
+	//   - Stage reached MAX_ROULETTE_LEVEL after winning at the top stage.
+	bool chain_ended = sd->roulette.claimPrize
+		&& ( sd->roulette.stage == 0
+			|| sd->roulette.stage >= MAX_ROULETTE_LEVEL );
+	if( chain_ended ){
 		clif_roulette_getitem( sd );
+		// getitem() resets stage/claimPrize/prizeIdx; the spin below
+		// proceeds as a fresh chain starting at stage 0.
 	}
 
-	if (sd->roulette.stage >= MAX_ROULETTE_LEVEL){
-		// Make sure everything is reset
-		sd->roulette.stage = 0;
-		sd->roulette.claimPrize = false;
-		sd->roulette.prizeStage = 0;
-		sd->roulette.prizeIdx = -1;
+	bool fresh_chain = !sd->roulette.stage;
+	int32 next_stage_coin = -1; // 0=bronze, 1=silver, 2=gold
+
+	if( fresh_chain ){
+		// Cheapest tier first; silver/gold only as skip-start fallbacks.
+		if( sd->roulette_point.bronze > 0 ){
+			next_stage_coin = 0;
+		}else if( sd->roulette_point.silver >= 10 ){
+			next_stage_coin = 1;
+		}else if( sd->roulette_point.gold >= 10 ){
+			next_stage_coin = 2;
+		}
+	}else{
+		// Mid-chain: the tier of the current stage decides which coin pays
+		// for this spin. If the player is out of that coin, they must claim
+		// before continuing.
+		int32 tier;
+		if( sd->roulette.stage <= 2 ){
+			tier = 0;
+		}else if( sd->roulette.stage <= 4 ){
+			tier = 1;
+		}else{
+			tier = 2;
+		}
+		bool has_coin = ( tier == 0 ) ? ( sd->roulette_point.bronze > 0 )
+		              : ( tier == 1 ) ? ( sd->roulette_point.silver > 0 )
+		                              : ( sd->roulette_point.gold > 0 );
+		if( has_coin ){
+			next_stage_coin = tier;
+		}
 	}
 
-	if( !sd->roulette.stage && sd->roulette_point.bronze <= 0 && sd->roulette_point.silver < 10 && sd->roulette_point.gold < 10 ){
+	if( next_stage_coin < 0 ){
 		result = GENERATE_ROULETTE_NO_ENOUGH_POINT;
 	}else{
-		if (!sd->roulette.stage) {
-			if (sd->roulette_point.bronze > 0) {
+		if( fresh_chain ){
+			// Pay the entry cost AND set the starting stage based on tier.
+			if( next_stage_coin == 0 ){
+				sd->roulette_point.bronze -= 1;
+				sd->roulette.stage = 0;
+				pc_setreg2(sd, ROULETTE_BRONZE_VAR, sd->roulette_point.bronze);
+			}else if( next_stage_coin == 1 ){
+				sd->roulette_point.silver -= 10;
+				sd->roulette.stage = 3;
+				pc_setreg2(sd, ROULETTE_SILVER_VAR, sd->roulette_point.silver);
+			}else{
+				sd->roulette_point.gold -= 10;
+				sd->roulette.stage = 5;
+				pc_setreg2(sd, ROULETTE_GOLD_VAR, sd->roulette_point.gold);
+			}
+		}else{
+			// Mid-chain climb: 1 coin of the current tier.
+			if( next_stage_coin == 0 ){
 				sd->roulette_point.bronze -= 1;
 				pc_setreg2(sd, ROULETTE_BRONZE_VAR, sd->roulette_point.bronze);
-			} else if (sd->roulette_point.silver > 9) {
-				sd->roulette_point.silver -= 10;
-				sd->roulette.stage = 2;
+			}else if( next_stage_coin == 1 ){
+				sd->roulette_point.silver -= 1;
 				pc_setreg2(sd, ROULETTE_SILVER_VAR, sd->roulette_point.silver);
-			} else if (sd->roulette_point.gold > 9) {
-				sd->roulette_point.gold -= 10;
-				sd->roulette.stage = 4;
+			}else{
+				sd->roulette_point.gold -= 1;
 				pc_setreg2(sd, ROULETTE_GOLD_VAR, sd->roulette_point.gold);
 			}
 		}
@@ -23144,8 +23212,7 @@ void clif_parse_stylist_buy( int32 fd, map_session_data* sd ){
 						return;
 					}
 				}
-				sd->status.body = new_body;
-				clif_changelook( sd, LOOK_BODY2, new_body );
+				pc_changelook( sd, LOOK_BODY2, new_body );
 			}
 		}
 #if PACKETVER >= 20180516 && PACKETVER < 20231220
