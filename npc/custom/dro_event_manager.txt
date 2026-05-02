@@ -1,0 +1,137 @@
+// DimensionsRO — Event Manager
+// =============================================================================
+// Bindable atcommand @event para GMs ligarem eventos de EXP / Drop por tempo
+// definido. Salva baseline ao boot e reverte automaticamente via timer.
+//
+// Uso (GM in-game):
+//   @event exp <multiplicador> <horas>     // ex: @event exp 10 4  (10x por 4h)
+//   @event drop <multiplicador> <horas>    // ex: @event drop 5 2
+//   @event all <multiplicador> <horas>     // exp+drop juntos
+//   @event off                             // encerra eventos ativos imediatamente
+//   @event status                          // mostra estado atual
+//
+// Multiplicador é um FATOR sobre o baseline (ex: 2 = dobro do rate atual).
+// =============================================================================
+
+-	script	dro_event_mgr	-1,{
+	end;
+
+OnInit:
+	// Captura baseline ao boot do servidor.
+	$@dro_evt_base_exp     = getbattleflag("base_exp_rate");
+	$@dro_evt_base_job     = getbattleflag("job_exp_rate");
+	$@dro_evt_base_quest   = getbattleflag("quest_exp_rate");
+	$@dro_evt_base_common  = getbattleflag("item_rate_common");
+	$@dro_evt_base_heal    = getbattleflag("item_rate_heal");
+	$@dro_evt_base_use     = getbattleflag("item_rate_use");
+	$@dro_evt_base_equip   = getbattleflag("item_rate_equip");
+	$@dro_evt_base_card    = getbattleflag("item_rate_card");
+	bindatcmd "event", strnpcinfo(3) + "::OnAtcommand", 60, 99;
+	end;
+
+OnAtcommand:
+	if (.@atcmd_numparameters < 1) goto L_Help;
+	.@sub$ = .@atcmd_parameters$[0];
+
+	if (.@sub$ == "off")    goto L_Off;
+	if (.@sub$ == "status") goto L_Status;
+
+	if (.@atcmd_numparameters < 3) goto L_Help;
+	.@mult = atoi(.@atcmd_parameters$[1]);
+	.@hours = atoi(.@atcmd_parameters$[2]);
+	if (.@mult < 1 || .@mult > 100) {
+		dispbottom "[event] Multiplicador invalido (1-100).";
+		end;
+	}
+	if (.@hours < 1 || .@hours > 168) {
+		dispbottom "[event] Duracao invalida (1-168 horas).";
+		end;
+	}
+
+	if (.@sub$ == "exp")  { callsub L_StartExp,  .@mult, .@hours; goto L_Schedule; }
+	if (.@sub$ == "drop") { callsub L_StartDrop, .@mult, .@hours; goto L_Schedule; }
+	if (.@sub$ == "all")  {
+		callsub L_StartExp,  .@mult, .@hours;
+		callsub L_StartDrop, .@mult, .@hours;
+		goto L_Schedule;
+	}
+	goto L_Help;
+
+L_Schedule:
+	$dro_evt_until = gettimetick(2) + (.@hours * 3600);
+	$dro_evt_mult  = .@mult;
+	$dro_evt_kind$ = .@sub$;
+	announce "[Evento] " + .@sub$ + " x" + .@mult + " ativo por " + .@hours + "h!", bc_all|bc_blue;
+	stopnpctimer;
+	initnpctimer;
+	end;
+
+L_StartExp:
+	setbattleflag "base_exp_rate",  getarg(0) * $@dro_evt_base_exp;
+	setbattleflag "job_exp_rate",   getarg(0) * $@dro_evt_base_job;
+	setbattleflag "quest_exp_rate", getarg(0) * $@dro_evt_base_quest;
+	return;
+
+L_StartDrop:
+	setbattleflag "item_rate_common", getarg(0) * $@dro_evt_base_common;
+	setbattleflag "item_rate_heal",   getarg(0) * $@dro_evt_base_heal;
+	setbattleflag "item_rate_use",    getarg(0) * $@dro_evt_base_use;
+	setbattleflag "item_rate_equip",  getarg(0) * $@dro_evt_base_equip;
+	// Cards NAO entram no boost (cap continua 1%).
+	return;
+
+OnTimer60000:
+	if ($dro_evt_until == 0) { stopnpctimer; end; }
+	if (gettimetick(2) >= $dro_evt_until) {
+		callsub L_RestoreAll;
+		announce "[Evento] " + $dro_evt_kind$ + " encerrado.", bc_all|bc_blue;
+		$dro_evt_until = 0;
+		$dro_evt_mult  = 0;
+		$dro_evt_kind$ = "";
+		stopnpctimer;
+		end;
+	}
+	initnpctimer;
+	end;
+
+L_RestoreAll:
+	setbattleflag "base_exp_rate",    $@dro_evt_base_exp;
+	setbattleflag "job_exp_rate",     $@dro_evt_base_job;
+	setbattleflag "quest_exp_rate",   $@dro_evt_base_quest;
+	setbattleflag "item_rate_common", $@dro_evt_base_common;
+	setbattleflag "item_rate_heal",   $@dro_evt_base_heal;
+	setbattleflag "item_rate_use",    $@dro_evt_base_use;
+	setbattleflag "item_rate_equip",  $@dro_evt_base_equip;
+	return;
+
+L_Off:
+	if ($dro_evt_until == 0) {
+		dispbottom "[event] Nenhum evento ativo.";
+		end;
+	}
+	callsub L_RestoreAll;
+	announce "[Evento] " + $dro_evt_kind$ + " encerrado pelo GM.", bc_all|bc_blue;
+	$dro_evt_until = 0;
+	$dro_evt_mult  = 0;
+	$dro_evt_kind$ = "";
+	stopnpctimer;
+	end;
+
+L_Status:
+	if ($dro_evt_until == 0) {
+		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + ($@dro_evt_base_exp/100) + "x drop=" + ($@dro_evt_base_common/100) + "x";
+		end;
+	}
+	.@rem = $dro_evt_until - gettimetick(2);
+	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " x" + $dro_evt_mult + ", " + (.@rem/60) + "min restantes";
+	end;
+
+L_Help:
+	dispbottom "[event] Uso:";
+	dispbottom "  @event exp <mult> <horas>     - boost EXP (base/job/quest)";
+	dispbottom "  @event drop <mult> <horas>    - boost drops (sem cards)";
+	dispbottom "  @event all <mult> <horas>     - exp+drop juntos";
+	dispbottom "  @event off                    - encerra evento ativo";
+	dispbottom "  @event status                 - mostra estado";
+	end;
+}
