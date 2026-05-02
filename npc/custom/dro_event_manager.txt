@@ -100,20 +100,17 @@ OnAtcommand:
 	$dro_man_pct   = .@boost;
 	callsub L_ApplyRates;
 
+	// Mensagem normaliza baseline = 100%. Total = 100 + boost.
 	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
-	.@base_exp_pct  = $@dro_base_exp;
-	.@base_drop_pct = $@dro_base_common;
-	.@evt_exp_pct   = .@base_exp_pct  * .@boost / 100;
-	.@evt_drop_pct  = .@base_drop_pct * .@boost / 100;
-	.@total_exp_pct  = .@base_exp_pct  + .@evt_exp_pct;
-	.@total_drop_pct = .@base_drop_pct + .@evt_drop_pct;
+	.@total = 100 + .@boost;
+	.@rate$ = .@total + "% (100% base + " + .@boost + "% evento)";
 
 	if (.@sub$ == "exp")
-		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@total_exp_pct + "% (base " + .@base_exp_pct + "% + evento " + .@evt_exp_pct + "%) pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else if (.@sub$ == "drop")
-		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@total_drop_pct + "% (base " + .@base_drop_pct + "% + evento " + .@evt_drop_pct + "%) pelas proximas " + .@dur$ + ". Bom farm!";
+		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else
-		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP em " + .@total_exp_pct + "% e Drops em " + .@total_drop_pct + "% (+" + .@boost + "% sobre a base) pelas proximas " + .@dur$ + ". Aproveitem!";
+		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP e Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Aproveitem!";
 	announce .@msg$, bc_all|bc_blue;
 	dispbottom "[event] " + .@msg$;
 
@@ -263,9 +260,9 @@ L_Weekend:
 	if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) {
 		$dro_wkn_on = 1;
 		callsub L_ApplyRates;
-		.@total_exp  = $@dro_base_exp    + ($@dro_base_exp    * .@wexp  / 100);
-		.@total_drop = $@dro_base_common + ($@dro_base_common * .@wdrop / 100);
-		announce "*** EVENTO DE FIM DE SEMANA! *** EXP em " + .@total_exp + "% e Drops em " + .@total_drop + "% (+" + .@wexp + "%/+" + .@wdrop + "% sobre a base) ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
+		.@texp  = 100 + .@wexp;
+		.@tdrop = 100 + .@wdrop;
+		announce "*** EVENTO DE FIM DE SEMANA! *** EXP em " + .@texp + "% (100% base + " + .@wexp + "% evento) e Drops em " + .@tdrop + "% (100% base + " + .@wdrop + "% evento) ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
 		stopnpctimer;
 		initnpctimer;
 	} else {
@@ -285,9 +282,9 @@ OnFri2200:
 	if ($dro_wkn_exp == 0 && $dro_wkn_drop == 0) end;
 	$dro_wkn_on = 1;
 	callsub L_ApplyRates;
-	.@total_exp  = $@dro_base_exp    + ($@dro_base_exp    * $dro_wkn_exp  / 100);
-	.@total_drop = $@dro_base_common + ($@dro_base_common * $dro_wkn_drop / 100);
-	announce "*** EVENTO DE FIM DE SEMANA! *** EXP em " + .@total_exp + "% e Drops em " + .@total_drop + "% (+" + $dro_wkn_exp + "%/+" + $dro_wkn_drop + "% sobre a base) ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
+	.@texp  = 100 + $dro_wkn_exp;
+	.@tdrop = 100 + $dro_wkn_drop;
+	announce "*** EVENTO DE FIM DE SEMANA! *** EXP em " + .@texp + "% (100% base + " + $dro_wkn_exp + "% evento) e Drops em " + .@tdrop + "% (100% base + " + $dro_wkn_drop + "% evento) ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
 	stopnpctimer;
 	initnpctimer;
 	end;
