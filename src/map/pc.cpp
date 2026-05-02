@@ -2113,8 +2113,18 @@ bool pc_authok(map_session_data *sd, uint32 login_id2, time_t expiration_time, i
 	sd->status.hair_color = cap_value(sd->status.hair_color,MIN_HAIR_COLOR,MAX_HAIR_COLOR);
 	sd->status.clothes_color = cap_value(sd->status.clothes_color,MIN_CLOTH_COLOR,MAX_CLOTH_COLOR);
 
-	if( !job_db.exists( sd->status.body ) ){
-		sd->status.body = sd->status.class_;
+	// Validate persisted body sprite. The default body is class_; alt
+	// bodies (kRO Costume Change) are class IDs listed in this job's
+	// `alternate_outfits` (job_outfits.yml). Those alt IDs are NOT
+	// registered as standalone entries in job_db, so `job_db.exists()`
+	// alone would reset every legitimate alt body on reconnect.
+	if( sd->status.body != 0 && sd->status.body != sd->status.class_ ){
+		std::shared_ptr<s_job_info> job = job_db.find( sd->status.class_ );
+		bool is_valid_alt = job != nullptr
+			&& util::vector_exists( job->alternate_outfits, (uint16)sd->status.body );
+		if( !is_valid_alt && !job_db.exists( sd->status.body ) ){
+			sd->status.body = sd->status.class_;
+		}
 	}
 
 	//Initializations to null/0 unneeded since map_session_data was filled with 0 upon allocation.
@@ -11147,8 +11157,17 @@ void pc_changelook(map_session_data *sd,int32 type,int32 val) {
 		sd->setlook_robe = val;
 		break;
 	case LOOK_BODY2:
-		if( !job_db.exists( val ) ){
-			return;
+		// Accept default body (class_) and any alt outfit id listed in the
+		// player's class entry. Alt outfit ids aren't registered in job_db
+		// as standalone jobs so a plain job_db.exists() check would reject
+		// every legitimate Costume Change.
+		if( val != 0 && val != sd->status.class_ ){
+			std::shared_ptr<s_job_info> job = job_db.find( sd->status.class_ );
+			bool is_valid_alt = job != nullptr
+				&& util::vector_exists( job->alternate_outfits, (uint16)val );
+			if( !is_valid_alt && !job_db.exists( val ) ){
+				return;
+			}
 		}
 
 		sd->status.body = val;
