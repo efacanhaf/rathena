@@ -1,0 +1,6 @@
+// DimensionsRO local overrides for packet_athena.conf
+
+// Always allow localhost — prevents the DDoS protection from blocking us
+// during testing (the bot + dev client retry quickly enough to trip the
+// 5-attempts-per-3s threshold and lock us out for 10 minutes).
+allow: 127.0.0.1
