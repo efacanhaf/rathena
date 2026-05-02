@@ -41,14 +41,13 @@ item_rate_equip_boss: 1000
 item_rate_equip_mvp: 1500
 
 // === Cards ===
-// Cartas normais/boss: cap em 1%, multiplier 100x faz a maioria bater o cap.
-// Cartas MVP: sem multiplier (100=1x), floor em 0.1% via item_drop_card_min.
-// (item_drop_card_min/max e clamp UNICO pra todas as cartas — clamp pra cima
-// no min e pra baixo no max simulam "fixos" de 0.1% e 1%.)
-item_rate_card: 10000
-item_rate_card_boss: 10000
+// FIXO em 1% pra TODAS cartas (regular/boss/MVP) via min=max=100.
+// Multipliers nao importam mais — clamp force 1% pra cima e pra baixo.
+// Diferenciacao por carta especifica deve ser feita per-mob ou per-item.
+item_rate_card: 100
+item_rate_card_boss: 100
 item_rate_card_mvp: 100
-item_drop_card_min: 10
+item_drop_card_min: 100
 item_drop_card_max: 100
 
 // === MVP-specific drops (Old Card Album, Old Violet Box, etc) ===
