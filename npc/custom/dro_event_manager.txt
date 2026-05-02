@@ -1,42 +1,61 @@
 // DimensionsRO — Event Manager
 // =============================================================================
-// Bindable atcommand @event para GMs ligarem eventos de EXP / Drop por tempo
-// definido. Salva baseline ao boot e reverte automaticamente via timer.
+// Suporta DOIS eventos simultaneos e independentes:
 //
-// Uso (GM in-game):
-//   @event exp <pct> <horas>       // ex: @event exp 150 4   (1.5x = +50% por 4h)
-//   @event drop <pct> <horas>      // ex: @event drop 200 2  (2x = +100% por 2h)
-//   @event all <pct> <horas>       // exp+drop juntos no mesmo pct
-//   @event off                     // encerra eventos ativos imediatamente
-//   @event status                  // mostra estado atual
+//   1. EVENTO MANUAL — @event exp/drop/all <pct> <horas>
+//      Acionado pelo GM, dura X horas, encerra com @event off.
 //
-// <pct> é a taxa ABSOLUTA em centesimal (100 = 1x = sem mudanca).
-// Exemplos: 150 = 1.5x (+50%), 200 = 2x (+100%), 1000 = 10x (+900%).
-// Range: 50 (-50%) a 10000 (100x).
-// Substitui o baseline atual; ao encerrar, restaura ao baseline do boot.
+//   2. EVENTO AUTO DE FIM DE SEMANA — @event weekend <exp_pct> <drop_pct>
+//      Liga sozinho Sex 19h BRT (= Sex 22h UTC), desliga Seg 00h BRT
+//      (= Seg 03h UTC). Configuracao persiste nos $globals.
+//
+// Quando os dois estao ativos simultaneamente, o MANUAL TEM PRIORIDADE
+// (ou seja, o pct manual sobrescreve o pct do fim de semana naquela rate).
+// Quando o manual termina, automaticamente volta ao pct do fim de semana
+// se ainda estiver dentro da janela; senao, volta ao baseline.
+//
+// "@event off" encerra SOMENTE o manual — o auto fim de semana continua.
+// Pra desativar o auto: "@event weekend off".
+//
+// pct é taxa absoluta em centesimal: 100 = 1x (sem mudanca), 200 = +100%, etc.
+// Range valido: 50 a 10000.
 // =============================================================================
 
 -	script	dro_event_mgr	-1,{
 	end;
 
 OnInit:
-	$@dro_evt_base_exp     = getbattleflag("base_exp_rate");
-	$@dro_evt_base_job     = getbattleflag("job_exp_rate");
-	$@dro_evt_base_quest   = getbattleflag("quest_exp_rate");
-	$@dro_evt_base_common  = getbattleflag("item_rate_common");
-	$@dro_evt_base_heal    = getbattleflag("item_rate_heal");
-	$@dro_evt_base_use     = getbattleflag("item_rate_use");
-	$@dro_evt_base_equip   = getbattleflag("item_rate_equip");
-	$@dro_evt_base_card    = getbattleflag("item_rate_card");
+	// Captura baseline ao boot.
+	$@dro_base_exp    = getbattleflag("base_exp_rate");
+	$@dro_base_job    = getbattleflag("job_exp_rate");
+	$@dro_base_quest  = getbattleflag("quest_exp_rate");
+	$@dro_base_common = getbattleflag("item_rate_common");
+	$@dro_base_heal   = getbattleflag("item_rate_heal");
+	$@dro_base_use    = getbattleflag("item_rate_use");
+	$@dro_base_equip  = getbattleflag("item_rate_equip");
 	bindatcmd "event", strnpcinfo(3) + "::OnAtcommand", 60, 99;
 
-	// Se o servidor reiniciou dentro da janela de fim de semana, reativa o boost.
-	if ($dro_evt_weekend_exp > 0 || $dro_evt_weekend_drop > 0) {
-		.@wd = gettime(GETTIME_WEEKDAY);  // 0=Dom, 5=Sex, 6=Sab (UTC)
+	// Se restartou dentro da janela do fim de semana, retoma o flag.
+	if ($dro_wkn_exp > 0 || $dro_wkn_drop > 0) {
+		.@wd = gettime(GETTIME_WEEKDAY);
 		.@h  = gettime(GETTIME_HOUR);
-		if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) {
-			callsub L_StartWeekend;
-		}
+		if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3))
+			$dro_wkn_on = 1;
+		else
+			$dro_wkn_on = 0;
+	}
+	callsub L_ApplyRates;
+
+	// Se manual estava ativo e o tempo ja passou (server ficou offline durante),
+	// limpa o estado pra evitar zumbi.
+	if ($dro_man_until > 0 && gettimetick(2) >= $dro_man_until) {
+		$dro_man_until = 0;
+		$dro_man_kind$ = "";
+		$dro_man_pct   = 0;
+	}
+	if ($dro_man_until > 0 || $dro_wkn_on > 0) {
+		stopnpctimer;
+		initnpctimer;
 	}
 	end;
 
@@ -48,11 +67,13 @@ OnAtcommand:
 	if (.@sub$ == "status")  goto L_Status;
 	if (.@sub$ == "weekend") goto L_Weekend;
 
+	// Eventos manuais (exp/drop/all)
+	if (.@sub$ != "exp" && .@sub$ != "drop" && .@sub$ != "all") goto L_Help;
 	if (.@atcmd_numparameters < 3) goto L_Help;
-	.@pct = atoi(.@atcmd_parameters$[1]);
+	.@pct   = atoi(.@atcmd_parameters$[1]);
 	.@hours = atoi(.@atcmd_parameters$[2]);
 	if (.@pct < 50 || .@pct > 10000) {
-		dispbottom "[event] Taxa invalida (50 a 10000). Ex: 150 = +50%, 200 = 2x.";
+		dispbottom "[event] Taxa invalida (50-10000). Ex: 150 = +50%, 200 = 2x.";
 		end;
 	}
 	if (.@hours < 1 || .@hours > 168) {
@@ -60,151 +81,166 @@ OnAtcommand:
 		end;
 	}
 
-	if (.@sub$ != "exp" && .@sub$ != "drop" && .@sub$ != "all") goto L_Help;
-
-	if (.@sub$ == "exp" || .@sub$ == "all") callsub L_StartExp, .@pct;
-	if (.@sub$ == "drop" || .@sub$ == "all") callsub L_StartDrop, .@pct;
-
-	$dro_evt_until = gettimetick(2) + (.@hours * 3600);
-	$dro_evt_pct   = .@pct;
-	$dro_evt_kind$ = .@sub$;
+	$dro_man_until = gettimetick(2) + (.@hours * 3600);
+	$dro_man_kind$ = .@sub$;
+	$dro_man_pct   = .@pct;
+	callsub L_ApplyRates;
 
 	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
 	.@boost = .@pct - 100;
 	.@rate$ = .@pct + "% (100% base + " + .@boost + "% evento)";
-
 	if (.@sub$ == "exp")
 		.@msg$ = "*** EVENTO DE EXP ATIVADO! *** EXP em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else if (.@sub$ == "drop")
 		.@msg$ = "*** EVENTO DE DROP ATIVADO! *** Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Bom farm!";
 	else
 		.@msg$ = "*** EVENTO DE EXP + DROP ATIVADO! *** EXP e Drops em " + .@rate$ + " pelas proximas " + .@dur$ + ". Aproveitem!";
-
 	announce .@msg$, bc_all|bc_blue;
 	dispbottom "[event] " + .@msg$;
+
 	stopnpctimer;
 	initnpctimer;
-	end;
-
-L_StartExp:
-	setbattleflag "base_exp_rate",  getarg(0);
-	setbattleflag "job_exp_rate",   getarg(0);
-	setbattleflag "quest_exp_rate", getarg(0);
-	return;
-
-L_StartDrop:
-	setbattleflag "item_rate_common", getarg(0);
-	setbattleflag "item_rate_heal",   getarg(0);
-	setbattleflag "item_rate_use",    getarg(0);
-	setbattleflag "item_rate_equip",  getarg(0);
-	// Cards NAO entram no boost (cap item_drop_card_max=100 continua valendo).
-	return;
-
-OnTimer60000:
-	if ($dro_evt_until == 0) { stopnpctimer; end; }
-	// Weekend events ($dro_evt_until == -1) terminam via OnMon0300, nao por timer.
-	if ($dro_evt_until > 0 && gettimetick(2) >= $dro_evt_until) {
-		callsub L_RestoreAll;
-		announce "Evento encerrado. Taxas voltaram ao normal. Obrigado por jogar!", bc_all|bc_blue;
-		$dro_evt_until = 0;
-		$dro_evt_pct   = 0;
-		$dro_evt_kind$ = "";
-		stopnpctimer;
-		end;
-	}
-	initnpctimer;
-	end;
-
-L_RestoreAll:
-	setbattleflag "base_exp_rate",    $@dro_evt_base_exp;
-	setbattleflag "job_exp_rate",     $@dro_evt_base_job;
-	setbattleflag "quest_exp_rate",   $@dro_evt_base_quest;
-	setbattleflag "item_rate_common", $@dro_evt_base_common;
-	setbattleflag "item_rate_heal",   $@dro_evt_base_heal;
-	setbattleflag "item_rate_use",    $@dro_evt_base_use;
-	setbattleflag "item_rate_equip",  $@dro_evt_base_equip;
-	return;
-
-L_Off:
-	if ($dro_evt_until == 0) {
-		dispbottom "[event] Nenhum evento ativo.";
-		end;
-	}
-	callsub L_RestoreAll;
-	announce "Evento encerrado antecipadamente pela administracao. Taxas voltaram ao normal.", bc_all|bc_blue;
-	$dro_evt_until = 0;
-	$dro_evt_pct   = 0;
-	$dro_evt_kind$ = "";
-	stopnpctimer;
-	end;
-
-L_Status:
-	if ($dro_evt_until == 0) {
-		dispbottom "[event] Nenhum evento ativo. Baseline: exp=" + $@dro_evt_base_exp + "% drop=" + $@dro_evt_base_common + "%";
-		end;
-	}
-	.@rem = $dro_evt_until - gettimetick(2);
-	.@boost = $dro_evt_pct - 100;
-	dispbottom "[event] Ativo: " + $dro_evt_kind$ + " " + $dro_evt_pct + "% (100% base + " + .@boost + "% evento), " + (.@rem/60) + "min restantes";
-	end;
-
-L_Help:
-	dispbottom "[event] Uso:";
-	dispbottom "  @event exp <pct> <horas>           - boost EXP manual";
-	dispbottom "  @event drop <pct> <horas>          - boost drops manual (sem cards)";
-	dispbottom "  @event all <pct> <horas>           - exp+drop juntos";
-	dispbottom "  @event off                         - encerra evento ativo";
-	dispbottom "  @event status                      - mostra estado atual";
-	dispbottom "  @event weekend <exp> <drop>        - habilita evento auto Sex 19h-Seg 0h BRT";
-	dispbottom "  @event weekend off                 - desabilita evento auto";
-	dispbottom "  @event weekend status              - mostra config do auto";
 	end;
 
 // =============================================================================
-// Weekend auto event — Fri 19h to Mon 00h BRT (= Fri 22h UTC to Mon 03h UTC).
-// Server runs in UTC; OnFri2200 / OnMon0300 trigger.
+// Aplica taxas baseado no estado atual. Manual sobrescreve weekend.
+// =============================================================================
+L_ApplyRates:
+	.@now = gettimetick(2);
+	.@man_active = ($dro_man_until > 0 && .@now < $dro_man_until) ? 1 : 0;
+	.@wkn_exp_active  = ($dro_wkn_on > 0 && $dro_wkn_exp  > 0) ? 1 : 0;
+	.@wkn_drop_active = ($dro_wkn_on > 0 && $dro_wkn_drop > 0) ? 1 : 0;
+
+	// EXP rates
+	if (.@man_active && ($dro_man_kind$ == "exp" || $dro_man_kind$ == "all"))
+		.@rate_exp = $dro_man_pct;
+	else if (.@wkn_exp_active)
+		.@rate_exp = $dro_wkn_exp;
+	else
+		.@rate_exp = $@dro_base_exp;
+	setbattleflag "base_exp_rate",  .@rate_exp;
+	setbattleflag "job_exp_rate",   .@rate_exp;
+	setbattleflag "quest_exp_rate", .@rate_exp;
+
+	// Drop rates
+	if (.@man_active && ($dro_man_kind$ == "drop" || $dro_man_kind$ == "all"))
+		.@rate_drop = $dro_man_pct;
+	else if (.@wkn_drop_active)
+		.@rate_drop = $dro_wkn_drop;
+	else
+		.@rate_drop = $@dro_base_common;
+	setbattleflag "item_rate_common", .@rate_drop;
+	setbattleflag "item_rate_heal",   .@rate_drop;
+	setbattleflag "item_rate_use",    .@rate_drop;
+	setbattleflag "item_rate_equip",  .@rate_drop;
+	return;
+
+OnTimer60000:
+	// Auto-encerra manual quando timer expira.
+	if ($dro_man_until > 0 && gettimetick(2) >= $dro_man_until) {
+		.@had_kind$ = $dro_man_kind$;
+		$dro_man_until = 0;
+		$dro_man_kind$ = "";
+		$dro_man_pct   = 0;
+		callsub L_ApplyRates;
+		// Se ainda tem weekend ativo, anuncia que voltamos pra weekend.
+		if ($dro_wkn_on > 0 && ($dro_wkn_exp > 0 || $dro_wkn_drop > 0)) {
+			announce "Evento manual encerrado. Voltamos as taxas do fim de semana.", bc_all|bc_blue;
+		} else {
+			announce "Evento encerrado. Taxas voltaram ao normal. Obrigado por jogar!", bc_all|bc_blue;
+		}
+	}
+	// Continua o timer enquanto algum evento estiver ativo.
+	if ($dro_man_until > 0 || $dro_wkn_on > 0) {
+		initnpctimer;
+		end;
+	}
+	stopnpctimer;
+	end;
+
+L_Off:
+	if ($dro_man_until == 0) {
+		dispbottom "[event] Nenhum evento manual ativo. (Auto fim de semana nao e afetado por @event off — use @event weekend off pra ele.)";
+		end;
+	}
+	$dro_man_until = 0;
+	$dro_man_kind$ = "";
+	$dro_man_pct   = 0;
+	callsub L_ApplyRates;
+	if ($dro_wkn_on > 0 && ($dro_wkn_exp > 0 || $dro_wkn_drop > 0)) {
+		announce "Evento manual encerrado pela administracao. Taxas do fim de semana mantidas.", bc_all|bc_blue;
+	} else {
+		announce "Evento encerrado antecipadamente pela administracao. Taxas voltaram ao normal.", bc_all|bc_blue;
+	}
+	end;
+
+L_Status:
+	dispbottom "[event] === Status ===";
+	if ($dro_man_until > 0) {
+		.@rem = $dro_man_until - gettimetick(2);
+		.@boost = $dro_man_pct - 100;
+		dispbottom "  Manual: " + $dro_man_kind$ + " " + $dro_man_pct + "% (100% base + " + .@boost + "% evento), " + (.@rem/60) + "min restantes";
+	} else {
+		dispbottom "  Manual: nenhum";
+	}
+	if ($dro_wkn_exp > 0 || $dro_wkn_drop > 0) {
+		.@on$ = ($dro_wkn_on > 0) ? "ATIVO AGORA" : "agendado";
+		dispbottom "  Auto fim de semana: " + .@on$ + " (EXP " + $dro_wkn_exp + "%, Drop " + $dro_wkn_drop + "%)";
+		dispbottom "    Janela: Sex 19h - Seg 00h (Brasilia)";
+	} else {
+		dispbottom "  Auto fim de semana: desativado";
+	}
+	dispbottom "  Baseline: EXP " + $@dro_base_exp + "%, Drop " + $@dro_base_common + "%";
+	end;
+
+// =============================================================================
+// Auto fim de semana — Sex 19h BRT a Seg 00h BRT (UTC: Sex 22h a Seg 03h)
 // =============================================================================
 L_Weekend:
 	if (.@atcmd_numparameters < 2) goto L_WeekendHelp;
 	.@arg$ = .@atcmd_parameters$[1];
 
 	if (.@arg$ == "off") {
-		$dro_evt_weekend_exp  = 0;
-		$dro_evt_weekend_drop = 0;
-		dispbottom "[event] Evento auto de fim de semana DESATIVADO.";
+		$dro_wkn_exp  = 0;
+		$dro_wkn_drop = 0;
+		$dro_wkn_on   = 0;
+		callsub L_ApplyRates;
+		dispbottom "[event] Auto fim de semana DESATIVADO.";
 		end;
 	}
 	if (.@arg$ == "status") {
-		if ($dro_evt_weekend_exp == 0 && $dro_evt_weekend_drop == 0) {
+		if ($dro_wkn_exp == 0 && $dro_wkn_drop == 0) {
 			dispbottom "[event] Auto fim de semana: DESATIVADO.";
 		} else {
-			dispbottom "[event] Auto fim de semana: ATIVO. EXP " + $dro_evt_weekend_exp + "%, Drop " + $dro_evt_weekend_drop + "%.";
-			dispbottom "  Janela: Sex 19h - Seg 00h (Brasilia).";
+			.@now$ = ($dro_wkn_on > 0) ? "ATIVO AGORA" : "agendado pra Sex 19h Brasilia";
+			dispbottom "[event] Auto fim de semana (" + .@now$ + "): EXP " + $dro_wkn_exp + "%, Drop " + $dro_wkn_drop + "%.";
 		}
 		end;
 	}
 
-	// "weekend <exp_pct> <drop_pct>"
 	if (.@atcmd_numparameters < 3) goto L_WeekendHelp;
 	.@wexp  = atoi(.@atcmd_parameters$[1]);
 	.@wdrop = atoi(.@atcmd_parameters$[2]);
 	if (.@wexp < 50 || .@wexp > 10000 || .@wdrop < 50 || .@wdrop > 10000) {
-		dispbottom "[event] Taxas invalidas (50-10000). Ex: weekend 200 200 = +100% exp +100% drop.";
+		dispbottom "[event] Taxas invalidas (50-10000). Ex: weekend 200 200.";
 		end;
 	}
-	$dro_evt_weekend_exp  = .@wexp;
-	$dro_evt_weekend_drop = .@wdrop;
-	dispbottom "[event] Auto fim de semana CONFIGURADO: EXP " + .@wexp + "%, Drop " + .@wdrop + "%.";
-	dispbottom "  Vai ativar automaticamente Sex 19h e desativar Seg 00h (Brasilia).";
+	$dro_wkn_exp  = .@wexp;
+	$dro_wkn_drop = .@wdrop;
 
 	// Se ja estamos dentro da janela, ativa agora.
-	.@now = gettimetick(2);
-	.@wd  = gettime(GETTIME_WEEKDAY);  // 0=Dom, 5=Sex, 6=Sab (UTC server)
-	.@h   = gettime(GETTIME_HOUR);
-	if (((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) && $dro_evt_kind$ != "weekend") {
-		dispbottom "[event] Estamos dentro da janela do fim de semana — ativando agora.";
-		callsub L_StartWeekend;
+	.@wd = gettime(GETTIME_WEEKDAY);
+	.@h  = gettime(GETTIME_HOUR);
+	if ((.@wd == 5 && .@h >= 22) || .@wd == 6 || .@wd == 0 || (.@wd == 1 && .@h < 3)) {
+		$dro_wkn_on = 1;
+		callsub L_ApplyRates;
+		announce "*** EVENTO DE FIM DE SEMANA! *** EXP " + .@wexp + "% e Drops " + .@wdrop + "% ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
+		stopnpctimer;
+		initnpctimer;
+	} else {
+		$dro_wkn_on = 0;
 	}
+	dispbottom "[event] Auto fim de semana CONFIGURADO: EXP " + .@wexp + "%, Drop " + .@wdrop + "%. Vai ativar Sex 19h e desativar Seg 00h (Brasilia).";
 	end;
 
 L_WeekendHelp:
@@ -214,42 +250,35 @@ L_WeekendHelp:
 	dispbottom "  @event weekend status                 - mostra config";
 	end;
 
-L_StartWeekend:
-	if ($dro_evt_weekend_exp == 0 && $dro_evt_weekend_drop == 0) return;
-	// Não sobrescreve evento manual em andamento
-	if ($dro_evt_until > 0 && $dro_evt_kind$ != "weekend") return;
-
-	if ($dro_evt_weekend_exp > 0) {
-		setbattleflag "base_exp_rate",  $dro_evt_weekend_exp;
-		setbattleflag "job_exp_rate",   $dro_evt_weekend_exp;
-		setbattleflag "quest_exp_rate", $dro_evt_weekend_exp;
-	}
-	if ($dro_evt_weekend_drop > 0) {
-		setbattleflag "item_rate_common", $dro_evt_weekend_drop;
-		setbattleflag "item_rate_heal",   $dro_evt_weekend_drop;
-		setbattleflag "item_rate_use",    $dro_evt_weekend_drop;
-		setbattleflag "item_rate_equip",  $dro_evt_weekend_drop;
-	}
-
-	$dro_evt_kind$ = "weekend";
-	$dro_evt_pct   = ($dro_evt_weekend_exp > 0) ? $dro_evt_weekend_exp : $dro_evt_weekend_drop;
-	$dro_evt_until = -1;  // sentinel: ends via OnMon0300, não por timer
-
-	.@msg$ = "*** EVENTO DE FIM DE SEMANA! *** EXP " + $dro_evt_weekend_exp + "% e Drops " + $dro_evt_weekend_drop + "% ate segunda-feira 00h. Bom farm!";
-	announce .@msg$, bc_all|bc_blue;
-	return;
-
 OnFri2200:
-	callsub L_StartWeekend;
+	if ($dro_wkn_exp == 0 && $dro_wkn_drop == 0) end;
+	$dro_wkn_on = 1;
+	callsub L_ApplyRates;
+	announce "*** EVENTO DE FIM DE SEMANA! *** EXP " + $dro_wkn_exp + "% e Drops " + $dro_wkn_drop + "% ate segunda-feira 00h. Bom farm!", bc_all|bc_blue;
+	stopnpctimer;
+	initnpctimer;
 	end;
 
 OnMon0300:
-	if ($dro_evt_kind$ != "weekend") end;
-	callsub L_RestoreAll;
-	announce "Evento de fim de semana encerrado. Taxas voltaram ao normal. Boa semana!", bc_all|bc_blue;
-	$dro_evt_until = 0;
-	$dro_evt_pct   = 0;
-	$dro_evt_kind$ = "";
+	if ($dro_wkn_on == 0) end;
+	$dro_wkn_on = 0;
+	callsub L_ApplyRates;
+	if ($dro_man_until == 0)
+		announce "Evento de fim de semana encerrado. Taxas voltaram ao normal. Boa semana!", bc_all|bc_blue;
+	else
+		announce "Evento de fim de semana encerrado. Evento manual continua ativo.", bc_all|bc_blue;
+	end;
+
+L_Help:
+	dispbottom "[event] Manual (encerra com @event off):";
+	dispbottom "  @event exp <pct> <horas>     - boost EXP";
+	dispbottom "  @event drop <pct> <horas>    - boost drops (sem cards)";
+	dispbottom "  @event all <pct> <horas>     - exp+drop juntos";
+	dispbottom "  @event off                   - encerra evento manual";
+	dispbottom "[event] Auto fim de semana (encerra com weekend off):";
+	dispbottom "  @event weekend <exp> <drop>  - habilita Sex 19h-Seg 0h (Brasilia)";
+	dispbottom "  @event weekend off           - desabilita";
+	dispbottom "  @event weekend status        - mostra config";
+	dispbottom "[event] @event status          - mostra estado dos dois";
 	end;
 }
-
