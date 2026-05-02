@@ -22,6 +22,11 @@ base_exp_rate: 1000
 job_exp_rate: 1000
 quest_exp_rate: 600
 
+// Multi-level up: permite subir varios niveis num unico kill (sem cap em 99%).
+multi_level_up: yes
+multi_level_up_base: 0
+multi_level_up_job: 0
+
 // === Common items (potions, materials) ===
 item_rate_common: 500
 item_rate_common_boss: 500
