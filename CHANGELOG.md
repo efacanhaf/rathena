@@ -13,6 +13,60 @@ modificações desde o fork do upstream rAthena (`master` original) até o estad
 atual em `develop`. Após este ponto, mudanças seguem o ciclo normal `develop →
 main` com versionamento incremental (1.0.x patches, 1.x.0 features).
 
+### Stylist (@stylist) — kRO 2024+ Compatibility
+
+Cliente kRO Aug/2025 introduziu novo packet de Apply (`0x0bf7`) que rAthena
+upstream ainda não parsea. Fix consome o packet, reproduz a UI sem cobrar por
+categorias não alteradas e suporta o Costume Change.
+
+- **Packet `CZ_REQ_STYLE_CHANGE3` (0xbf7) registrado** (`src/map/packets.hpp`,
+  `src/map/clif_packetdb.hpp`): variable-length, layout `count + records[count]`
+  de 8 bytes (`[category, _, value, _]`). Resolve o disconnect ao apertar Apply
+  na janela do estilista em clientes 2024+.
+- **Mapa de categorias kRO → rAthena**: 0=Hair_Color (palette), 1=Hair (style),
+  2=Clothes_Color (palette), 3=Head_Top, 4=Head_Mid, 5=Head_Bottom, 9=Body2.
+  Paletas (0/1/2) usam lookup por `Value`; acessórios (3/4/5) usam lookup por
+  `Index` no DB.
+- **Atomic 2-pass dispatch** (`clif.cpp:clif_parse_stylist_buy`): Pass 1 valida
+  zeny/itens de todas categorias em dry-run; Pass 2 commita. Evita gastar zeny/
+  cupom quando uma categoria posterior falha (a UI do kRO 2024+ envia o estado
+  atual de todas categorias junto, então sem isso o jogador era cobrado por
+  estilos que não pediu).
+- **No-op skip**: categorias cuja `Value` já é a atual (`status.hair`,
+  `hair_color`, `clothes_color`, `body`) retornam sem cobrar. Necessário pelo
+  comportamento do cliente que sempre revalida tudo no Apply.
+- **Costume Change (toggle de model alternativo, kRO category 9)**: para 3rd
+  classes não-4th, alterna entre `status.class_` (default) e
+  `alternate_outfits[0]` do `job_db.find()` (ex.: GC_T 4065 ↔
+  JOB_GUILLOTINE_CROSS_2ND 4334). Consome 1 `Costume_Ticket` (id 6959) só ao
+  trocar para o alternativo — voltar pra default é grátis.
+- **Clothes_Color Value 1 adicionada ao DB** (`db/re/stylist.yml`): paleta 1
+  estava ausente entre Value 0 e Value 2; cliente kRO aceita 0..6 mas a entrada
+  intermediária faltava. Custo igual aos outros (`Clothing_Dye_Coupon`).
+- **`max_cloth_color: 7 → 6`** (`conf/battle/client.conf`): valor é o
+  índice máximo, não a contagem; range correto é 0..6 (7 paletas totais).
+
+### NPCs (Player-Facing)
+
+- **Job Master NPC ativado** em `prontera` (`npc/custom/jobmaster.txt`): NPC
+  oficial rAthena, posicionado no spot do Valerie. Bloqueia advancement pra 4th
+  jobs via runtime hook.
+- **Eden Group iRO VIP NPCs habilitados** em `moc_para01`
+  (`npc/re/quests/eden/eden_iro.txt`): npcs auxiliares (refine helpers, board
+  proxies) que vinham comentados.
+- **Adventurer Starter Kit reescrito** (`npc/custom/dro_starter_kit.txt`): 4
+  tiers (1st/2nd/Trans/3rd), gear vanilla apropriado por classe (sem Booster
+  endgame), validação de equipabilidade por classe, gating per-tier via flags
+  (`DRO_STARTER_T1`/`T2`/`T3`/`TAKEN`) — cada tier só pode ser claimado uma
+  vez. Sem consumíveis no kit.
+
+### Infra
+
+- **Map-server isolado em segunda instância Oracle** (136.248.101.89): login +
+  char + DB ficam na primeira (163.176.144.14); map sobe na segunda e
+  conversa com a DB via SSH tunnel (`/usr/local/bin/mysql-tunnel.sh`,
+  systemd-managed) pelo VCN privado. Reduz contenção CPU em surtos de map-side.
+
 ### Server Identity & Scope
 
 - **Episode 17.1 content lockdown** (`src/custom/ep17_1.hpp`,
@@ -211,4 +265,4 @@ conteúdo de 17.1. Aplicado em `src/map/battle.cpp`, `src/map/status.cpp` e
 
 ---
 
-_Maintained by the DimensionsRO team. Last updated: 2026-04-30._
+_Maintained by the DimensionsRO team. Last updated: 2026-05-02._
