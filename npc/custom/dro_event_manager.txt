@@ -61,7 +61,17 @@ L_Schedule:
 	$dro_evt_until = gettimetick(2) + (.@hours * 3600);
 	$dro_evt_mult  = .@mult;
 	$dro_evt_kind$ = .@sub$;
-	announce "[Evento] " + .@sub$ + " x" + .@mult + " ativo por " + .@hours + "h!", bc_all|bc_blue;
+	// Calcula a rate efetiva pra mostrar no anuncio.
+	.@eff_exp  = (.@mult * $@dro_evt_base_exp)    / 100;
+	.@eff_drop = (.@mult * $@dro_evt_base_common) / 100;
+	.@dur$ = (.@hours == 1) ? "1 hora" : (.@hours + " horas");
+	if (.@sub$ == "exp") {
+		announce "*** EVENTO DE EXP ATIVADO! *** EXP agora em " + .@eff_exp + "x pelas proximas " + .@dur$ + ". Bom farm!", bc_all|bc_blue;
+	} else if (.@sub$ == "drop") {
+		announce "*** EVENTO DE DROP ATIVADO! *** Drops agora em " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Bom farm!", bc_all|bc_blue;
+	} else {
+		announce "*** EVENTO DE EXP + DROP ATIVADO! *** EXP " + .@eff_exp + "x e Drops " + .@eff_drop + "x pelas proximas " + .@dur$ + ". Aproveitem!", bc_all|bc_blue;
+	}
 	stopnpctimer;
 	initnpctimer;
 	end;
@@ -84,7 +94,7 @@ OnTimer60000:
 	if ($dro_evt_until == 0) { stopnpctimer; end; }
 	if (gettimetick(2) >= $dro_evt_until) {
 		callsub L_RestoreAll;
-		announce "[Evento] " + $dro_evt_kind$ + " encerrado.", bc_all|bc_blue;
+		announce "Evento encerrado. Taxas voltaram ao normal. Obrigado por jogar!", bc_all|bc_blue;
 		$dro_evt_until = 0;
 		$dro_evt_mult  = 0;
 		$dro_evt_kind$ = "";
@@ -110,7 +120,7 @@ L_Off:
 		end;
 	}
 	callsub L_RestoreAll;
-	announce "[Evento] " + $dro_evt_kind$ + " encerrado pelo GM.", bc_all|bc_blue;
+	announce "Evento encerrado antecipadamente pela administracao. Taxas voltaram ao normal.", bc_all|bc_blue;
 	$dro_evt_until = 0;
 	$dro_evt_mult  = 0;
 	$dro_evt_kind$ = "";
