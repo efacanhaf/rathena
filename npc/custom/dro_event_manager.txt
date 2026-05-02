@@ -28,14 +28,27 @@
 	end;
 
 OnInit:
-	// Captura baseline ao boot.
-	$@dro_base_exp    = getbattleflag("base_exp_rate");
-	$@dro_base_job    = getbattleflag("job_exp_rate");
-	$@dro_base_quest  = getbattleflag("quest_exp_rate");
-	$@dro_base_common = getbattleflag("item_rate_common");
-	$@dro_base_heal   = getbattleflag("item_rate_heal");
-	$@dro_base_use    = getbattleflag("item_rate_use");
-	$@dro_base_equip  = getbattleflag("item_rate_equip");
+	// Captura baseline SOMENTE se nunca foi capturado. Persiste em $globals
+	// pra evitar re-captura em @reloadnpc enquanto eventos podem ter alterado
+	// as rates atuais. Pra recalibrar manualmente: @event recalib (sem evento ativo).
+	if ($dro_base_init == 0) {
+		$dro_base_exp    = getbattleflag("base_exp_rate");
+		$dro_base_job    = getbattleflag("job_exp_rate");
+		$dro_base_quest  = getbattleflag("quest_exp_rate");
+		$dro_base_common = getbattleflag("item_rate_common");
+		$dro_base_heal   = getbattleflag("item_rate_heal");
+		$dro_base_use    = getbattleflag("item_rate_use");
+		$dro_base_equip  = getbattleflag("item_rate_equip");
+		$dro_base_init   = 1;
+	}
+	// Atalhos $@ pra acesso rapido (mesma session).
+	$@dro_base_exp    = $dro_base_exp;
+	$@dro_base_job    = $dro_base_job;
+	$@dro_base_quest  = $dro_base_quest;
+	$@dro_base_common = $dro_base_common;
+	$@dro_base_heal   = $dro_base_heal;
+	$@dro_base_use    = $dro_base_use;
+	$@dro_base_equip  = $dro_base_equip;
 	bindatcmd "event", strnpcinfo(3) + "::OnAtcommand", 60, 99;
 
 	// Se restartou dentro da janela do fim de semana, retoma o flag.
@@ -67,6 +80,7 @@ OnAtcommand:
 	if (.@sub$ == "off")     goto L_Off;
 	if (.@sub$ == "status")  goto L_Status;
 	if (.@sub$ == "weekend") goto L_Weekend;
+	if (.@sub$ == "recalib") goto L_Recalib;
 
 	if (.@sub$ != "exp" && .@sub$ != "drop" && .@sub$ != "all") goto L_Help;
 	if (.@atcmd_numparameters < 3) goto L_Help;
@@ -288,6 +302,28 @@ OnMon0300:
 		announce "Evento de fim de semana encerrado. Evento manual continua ativo.", bc_all|bc_blue;
 	end;
 
+L_Recalib:
+	if ($dro_man_until > 0 || $dro_wkn_on > 0) {
+		dispbottom "[event] Recalib bloqueado: ha evento ativo. Encerre primeiro.";
+		end;
+	}
+	$dro_base_exp    = getbattleflag("base_exp_rate");
+	$dro_base_job    = getbattleflag("job_exp_rate");
+	$dro_base_quest  = getbattleflag("quest_exp_rate");
+	$dro_base_common = getbattleflag("item_rate_common");
+	$dro_base_heal   = getbattleflag("item_rate_heal");
+	$dro_base_use    = getbattleflag("item_rate_use");
+	$dro_base_equip  = getbattleflag("item_rate_equip");
+	$@dro_base_exp    = $dro_base_exp;
+	$@dro_base_job    = $dro_base_job;
+	$@dro_base_quest  = $dro_base_quest;
+	$@dro_base_common = $dro_base_common;
+	$@dro_base_heal   = $dro_base_heal;
+	$@dro_base_use    = $dro_base_use;
+	$@dro_base_equip  = $dro_base_equip;
+	dispbottom "[event] Baseline recapturado: EXP " + $dro_base_exp + "%, Drop " + $dro_base_common + "%.";
+	end;
+
 L_Help:
 	dispbottom "[event] Manual (encerra com @event off):";
 	dispbottom "  @event exp <boost> <horas>    - boost EXP (ex: 100 = +100% sobre a base)";
@@ -299,5 +335,6 @@ L_Help:
 	dispbottom "  @event weekend off            - desabilita";
 	dispbottom "  @event weekend status         - mostra config";
 	dispbottom "[event] @event status           - mostra estado dos dois";
+	dispbottom "[event] @event recalib          - recaptura baseline (sem evento ativo)";
 	end;
 }
