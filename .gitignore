@@ -64,7 +64,8 @@ Thumbs.db
 /3rdparty/httplib/obj
 
 # /db/
-/db/import
+# Track customs in db/import (no secrets there).
+#/db/import
 
 # /conf/
 # Only ignore inter_conf.txt — has DB credentials. Other import overrides
