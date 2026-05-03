@@ -20015,6 +20015,11 @@ BUILDIN_FUNC(unitwalk)
 		return SCRIPT_CMD_FAILURE;
 	}
 
+	// [DRO] Stop any non-script walk in progress (e.g. client auto-walk-to-NPC)
+	// so it doesn't race with the script's intended destination.
+	if (ud != nullptr && ud->walktimer != INVALID_TIMER)
+		unit_stop_walking(bl, USW_FORCE_STOP);
+
 	if (bl->type == BL_NPC) {
 		if (!((TBL_NPC*)bl)->status.hp)
 			status_calc_npc(((TBL_NPC*)bl), SCO_FIRST);
