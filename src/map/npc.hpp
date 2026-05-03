@@ -237,6 +237,7 @@ struct npc_data : public block_list {
 	std::vector<navi_link> links; // for extra links, like warper npc
 #endif
 	bool is_invisible;
+	bool walk_through = false; // [DRO] Custom: NPC doesn't count for cell stack — players can stand on the same tile.
 };
 
 struct eri;

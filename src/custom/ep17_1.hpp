@@ -77,8 +77,9 @@ inline const std::unordered_set<std::string> &locked_maps_() {
         "wand_fild01",
         "1@wand",
         // --- Ep 20 Iceflow
-        "ice_dun01",
-        "ice_dun02",
+        // ice_dun01-03 are classic Rachel Ice Dungeon (pre-17.1), kept open.
+        // ice_dun04 stays locked (Ep 20 Iceflow content).
+        "ice_dun04",
         "1@ice",
         // --- Ep 21 Demonio
         "dem_fild01",

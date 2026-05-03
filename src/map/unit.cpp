@@ -847,6 +847,14 @@ int32 unit_walktoxy( block_list *bl, int16 x, int16 y, unsigned char flag)
 	if (ud == nullptr)
 		return 0;
 
+	// [DRO] Block client-initiated stepaction walks (flag=4 from clif_parse_WalkToXY)
+	// from overriding script-initiated forced walks (force_walk=true).
+	// Without this, clicking an NPC could race: the client auto-walks the player
+	// adjacent (flag=4) AFTER our script's unitwalk to the NPC tile (flag=0), and
+	// the latter dest gets overwritten so the player ends adjacent.
+	if ((flag & 4) && ud->state.force_walk)
+		return 0;
+
 	if ((flag&8) && !map_nearby_freecell(bl->m, x, y, BL_CHAR|BL_NPC, 1)) //This might change x and y
 		return 0;
 

@@ -9,3 +9,6 @@
  **/
 
 //BUILDIN_DEF(example,""),
+BUILDIN_DEF(slide,"ii"),
+BUILDIN_DEF(setnpcwalkthrough,"i"),
+BUILDIN_DEF(ep17_feelslike,""),

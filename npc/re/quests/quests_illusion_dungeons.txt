@@ -8947,6 +8947,9 @@ prt_elib,57,18,4	script	Jerrymon#jerry	1_M_01,{
 OnInit:
 	// note: no questinfo for 3407
 	questinfo( QTYPE_QUEST2, QMARK_YELLOW, "isbegin_quest(3408) == 1" );
+	// [DRO] Ep 17.1 feels-like: prt_elib is post-17.1, relocate to prt_in.
+	if (ep17_feelslike())
+		unitwarp getnpcid(0), "prt_in", 157, 66;
 	end;
 }
 
@@ -11830,7 +11833,7 @@ einbroch,149,242,5	script	Coughing young man#ITB	4_M_NFMAN,3,3,{
 		mes "Why haven't you come back yet...";
 		mes "Cough Cough!!";
 		next;
-		mes "^ff0000¡Ø You can start this quest from level 150.^000000";
+		mes "^ff0000ï¿½ï¿½ You can start this quest from level 150.^000000";
 		close;
 	}
 	if (ill_teddy == 0) {
