@@ -71,6 +71,7 @@ Thumbs.db
 # Only ignore inter_conf.txt — has DB credentials. Other import overrides
 # (battle_conf, login_conf, packet_conf, etc.) are tracked.
 /conf/import/inter_conf.txt
+/conf/import/web_conf.txt
 /conf/msg_conf/import
 
 # /lib

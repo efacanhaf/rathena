@@ -44,6 +44,7 @@ struct Web_Config {
 	bool allow_gifs;
 
 	std::string allowed_origin_cors;				// allowed origin for CORS
+	std::string vip_api_key;						// shared secret for /vips endpoint
 };
 
 struct Inter_Config {
