@@ -16,16 +16,14 @@ prt_in,37,95,4	script	Mega Booster Support#dro	4_M_ALCHE_A,{
 	mes " ";
 
 	// Tier dispatch
+	// Trans 99 and 3rd 99 are the same level — diferença é só se trocou
+	// class. Trans 2nd cai em L_SecondKit (mesma base job, mesma arma mid).
 	if (Class >= Job_Rune_Knight) {
 		// 3rd kit (incl. Summoner, SN_E, etc.)
 		callsub L_ThirdKit;
 		close;
 	}
-	if (Upper == 1) {
-		callsub L_TransKit;
-		close;
-	}
-	if ((eaclass() & 768) != 0) {	// EAJL_2 = 0x300
+	if ((eaclass() & 768) != 0) {	// EAJL_2 = 0x300 (matches both 2nd and Trans 2nd)
 		callsub L_SecondKit;
 		close;
 	}
@@ -133,64 +131,6 @@ L_SecondKit:
 	getitem 2604, 1;	// Glove (all-class except Novice/SN)
 
 	set DRO_STARTER_T2, 1;
-	mes "[Mega Booster Support]";
-	mes "Pronto! Boa cacada.";
-	return;
-
-// ============================================================
-// Trans kit (Trans 2nd: Lord Knight, Paladin, ..., Stalker)
-// ============================================================
-L_TransKit:
-	if (DRO_STARTER_T3) {
-		mes "[Mega Booster Support]";
-		mes "Voce ja pegou o kit Trans.";
-		return;
-	}
-	if (BaseLevel < 99) {
-		mes "[Mega Booster Support]";
-		mes "Voce ja eh Trans, mas precisa de";
-		mes "^FF4444Base Level 99^000000 pra pegar o kit.";
-		return;
-	}
-	mes "[Mega Booster Support]";
-	mes "Tier Trans (Rebirth). Vou te equipar:";
-	mes "  arma Crimson + Valkyrian set + Megingjard + Brisingamen";
-	next;
-	if (select("Confirmar:Cancelar") != 1) return;
-
-	.@wep = 0;
-	switch (BaseJob) {
-		case Job_Knight:      .@wep = 21015; break;	// Crimson Two-Handed Sword
-		case Job_Priest:      .@wep = 16040; break;	// Crimson Mace
-		case Job_Wizard:      .@wep = 1680; break;	// Crimson Rod (Staff)
-		case Job_Blacksmith:  .@wep = 28106; break;	// Crimson Two-Handed Axe
-		case Job_Hunter:      .@wep = 18130; break;	// Crimson Bow
-		case Job_Assassin:    .@wep = 28007; break;	// Crimson Katar
-		case Job_Crusader:    .@wep = 13454; break;	// Crimson Saber
-		case Job_Monk:        .@wep = 1839; break;	// Crimson Knuckles
-		case Job_Sage:        .@wep = 28604; break;	// Crimson Bible
-		case Job_Rogue:       .@wep = 28705; break;	// Crimson Dagger
-		case Job_Alchemist:   .@wep = 16040; break;	// Crimson Mace
-		case Job_Bard:        .@wep = 1939; break;	// Crimson Violin
-		case Job_Dancer:      .@wep = 1995; break;	// Crimson Whip
-	}
-	if (.@wep == 0) {
-		mes "Classe Trans nao mapeada (Class=" + Class + "). Fala com GM.";
-		return;
-	}
-	if (checkweight(501, 1) == 0 || (MaxWeight - Weight) < 5000) {
-		mes "Inventario muito cheio. Volta mais leve.";
-		return;
-	}
-
-	getitem .@wep, 1;
-	getitem 2357, 1;	// Valkyrian Armor
-	getitem 2524, 1;	// Valkyrian Manteau
-	getitem 2421, 1;	// Valkyrian Shoes
-	getitem 2629, 1;	// Megingjard
-	getitem 2630, 1;	// Brisingamen
-
-	set DRO_STARTER_T3, 1;
 	mes "[Mega Booster Support]";
 	mes "Pronto! Boa cacada.";
 	return;
