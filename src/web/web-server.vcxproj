@@ -183,6 +183,7 @@
     <ClCompile Include="sqllock.cpp" />
     <ClCompile Include="status_controller.cpp" />
     <ClCompile Include="userconfig_controller.cpp" />
+    <ClCompile Include="vip_controller.cpp" />
     <ClCompile Include="webutils.cpp" />
     <ClCompile Include="web.cpp" />
   </ItemGroup>
@@ -196,6 +197,7 @@
     <ClInclude Include="sqllock.hpp" />
     <ClInclude Include="status_controller.hpp" />
     <ClInclude Include="userconfig_controller.hpp" />
+    <ClInclude Include="vip_controller.hpp" />
     <ClInclude Include="webutils.hpp" />
     <ClInclude Include="web.hpp" />
     <ClInclude Include="webcnslif.hpp" />

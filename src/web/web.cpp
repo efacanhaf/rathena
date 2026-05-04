@@ -31,6 +31,7 @@
 #include "merchantstore_controller.hpp"
 #include "partybooking_controller.hpp"
 #include "status_controller.hpp"
+#include "vip_controller.hpp"
 #include "userconfig_controller.hpp"
 
 
@@ -155,6 +156,8 @@ bool web_config_read(const char* cfgName, bool normal) {
 			web_config.allow_gifs = config_switch(w2) == 1;
 		else if (!strcmpi(w1, "allowed_origin_cors"))
 			web_config.allowed_origin_cors = w2;
+		else if (!strcmpi(w1, "vip_api_key"))
+			web_config.vip_api_key = w2;
 	}
 	fclose(fp);
 	ShowInfo("Finished reading %s.\n", cfgName);
@@ -498,6 +501,7 @@ bool WebServer::initialize( int32 argc, char* argv[] ){
 	http_server->Post("/userconfig/load", userconfig_load);
 	http_server->Post("/userconfig/save", userconfig_save);
 	http_server->Get("/status", status_get);
+	http_server->Get("/vips", vip_get);
 
 	// set up logger
 	http_server->set_logger(logger);
