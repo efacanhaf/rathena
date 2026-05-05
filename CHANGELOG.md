@@ -6,7 +6,7 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [1.1.0] — 2026-05-05
+## [1.0.0] — 2026-04-30 (atualizado 2026-05-05)
 
 ### Sunken Tower (Ep.18 instance) — DimensionsRO custom
 
@@ -61,9 +61,6 @@ Implementação dos NPCs oficiais kRO Booster Event via `barters.yml`
   (Two_Hand_Sword, Lance, Mace, Two_Handed_Axe, Dagger, Book, Staff, Katar,
   Bow, Revolver, Huuma_Shuriken, Foxtail).
 
----
-
-## [1.0.0] — 2026-04-30
 
 Release inicial consolidado da DimensionsRO. Esta versão agrega todas as
 modificações desde o fork do upstream rAthena (`master` original) até o estado
