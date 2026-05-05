@@ -6,7 +6,61 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
-## [1.0.0] — 2026-04-30
+## [1.0.0] — 2026-04-30 (atualizado 2026-05-05)
+
+### Sunken Tower (Ep.18 instance) — DimensionsRO custom
+
+NPC `Leticia` em `alberta 214,74` cria uma instance no map `1@ch_u`, baseada
+na spec oficial iRO Wiki/Sunken_Tower com ajustes pra DRO (cap lvl 175,
+Booster Coin reward custom).
+
+- **5 zonas walkable** detectadas no map_cache (X=4-51, 88-135, 176-223,
+  262-309, 346-393, todas Y=14-63). Floor cycle `(floor-1) % 5` cicla pelas
+  zonas — estilo EndlessTower.
+- **Mob count por floor**: 25/30/35/40/50 (cycle), via `areamonster` confinada
+  ao bounding box da zona ativa. Counter usa `mobcount(map, event_label)`
+  (não contador manual) — `killmonster` em `OnNextFloor` limpa residuais.
+- **11 ranks (R0–R10)** mapeados por BaseLevel oficial (40-249, ranks 7-10
+  inacessíveis no cap DRO 175 mas mantidos pra futura expansão). Cada rank
+  tem mob_db próprio (3960-3970) com level=range_min+14, BaseExp/JobExp=0,
+  sem skills/drops, stats bakeados (HP/ATK/DEF/HIT/FLEE/STR escalonados).
+- **Stats no mob_db** (não setunitdata): rAthena `status_calc_mob_` libera
+  `base_status` quando flag=0 sem `mobs_level_up`, fazendo `setunitdata
+  UMOB_*` virar lixo. Solução: 1 mob por rank com stats fixos. Apenas
+  `UMOB_CLASS` (sprite, visual-only) randomizado — pool de 132 sprites
+  oficiais documentados na iRO Wiki.
+- **5 Dimensional Devices** (sprite `4_RUNESTONE`), um por zona. Disabled
+  por default; habilitados em `OnMobDead` quando `mobcount < 1`. Sem check
+  de `'st_floor_clear` no clique (impossível clicar invisível).
+- **EXP custom** via `getexp` em `OnMobDead` (per-mob = `mob_exp_d1[rank]
+  * (100 + (diff-1)*20) / 100`). Bonus de 5th floor: `bonus_d1[rank]
+  * (100 + (diff-1)*100) / 100` + 1 Meteorite Dust garantido + roll de
+  `dust_chance` pra extras (ranks 8-10) + `max(rank,1) * diff` Booster
+  Coins.
+- **Completion reward** (OnTimer1800000, 30min): `max(rank,1) * diff`
+  Booster Coins por player no map. Warp pra alberta + destroy instance.
+- **Difficulty 1-5**: upgrade custa 10 Meteorite Dust por nível (Diff 1
+  sempre grátis). Multiplica EXP/Booster Coin/Dust chance.
+- **Cooldown 3 dias** per-character (`#SunkenTower_LastRun`). GM Reset
+  na Leticia bypassa pra teste.
+- **Rank passing**: globals `$@ST_pending_rank/diff` setados antes de
+  `instance_create`, lidos em `OnInstanceInit` (síncrono) — evita bug onde
+  spawn fira antes do player carregar (quando dependia de OnPCLoadMapEvent).
+
+### Booster Coin barter NPCs (Prontera)
+
+Implementação dos NPCs oficiais kRO Booster Event via `barters.yml`
+(BARTER_DB) — usa shop UI nativo com item-currency, sem cash shop dialog.
+
+- **Centro (166,300)** sprite `4_F_TELEPORTER`: 31 itens. Booster Coin
+  (1000254) → 12 tickets/upgrades/masks (Metal_W/7, Boost_A/W, Boost_Up,
+  Booster_Mask A/B/C, Almighty, World_Tour_Ticket, RandomOpt P/M); Booster
+  W Ticket → 18 booster weapons (todas as 3rd-class).
+- **Guarani (148,282)** sprite `4_M_DST_MASTER`: 16 itens. Boost_A_Ticket
+  → 4 armor crates (Atk/Ran/Ele/Defn); Metal_W_Ticket → 12 Metal weapons
+  (Two_Hand_Sword, Lance, Mace, Two_Handed_Axe, Dagger, Book, Staff, Katar,
+  Bow, Revolver, Huuma_Shuriken, Foxtail).
+
 
 Release inicial consolidado da DimensionsRO. Esta versão agrega todas as
 modificações desde o fork do upstream rAthena (`master` original) até o estado

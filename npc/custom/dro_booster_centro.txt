@@ -1,0 +1,33 @@
+//===== DimensionsRO ==========================================
+//= Centro — Booster Coin Exchange (Prontera 166, 300)
+//===== Description: =========================================
+//= NPC oficial kRO/iRO — troca Booster Coin (item 1000254) por
+//= itens do evento Booster.
+//=
+//= Usa `itemshop` (shop nativo com item-currency, NAO cashshop).
+//= Currency: Booster_Coin (1000254).
+//=
+//= Sources:
+//=   https://www.divine-pride.net/database/item/1000254
+//=   https://hazyforest.com/events:booster
+//=
+//= Itens (currency = Booster_Coin / 1000254):
+//=   25820   Metal Weapon Ticket                             1
+//=   100125  Metal Weapon +7 Refinement Ticket               5
+//=   1000006 Booster Armor Voucher                          20
+//=   1000253 Booster Weapon Voucher                         20
+//=   100043  Booster Armor UpgradeBox                       20
+//=   100044  Booster Weapon UpgradeBox                      20
+//=   410018  Booster Mask A-type [1]                       500
+//=   410019  Booster Mask B-type [1]                       500
+//=   410020  Booster Mask C-type [1]                       500
+//=   12883   Almighty (All-In-One Buff Potion)              20
+//=   25464   World Moving Ticket                             1
+//=   100722  Booster Modification Stone (Physical)           5
+//=   100723  Booster Modification Stone (Magical)            5
+//=
+//= Base EXP Potions (Low/Mid/High/Super) ainda nao mapeadas
+//= no item_db local — adicionar quando AegisName confirmado.
+//============================================================
+
+prontera,166,300,4	itemshop	Centro#booster	4_F_TELEPORTER,1000254,25820:1,100125:5,1000006:20,1000253:20,100043:20,100044:20,410018:500,410019:500,410020:500,12883:20,25464:1,100722:5,100723:5

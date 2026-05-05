@@ -1,0 +1,412 @@
+# =============================================================================
+# DimensionsRO — custom mob entries
+# =============================================================================
+# Sunken Tower variants (3960-3970) — UM mob por rank (0-10).
+#   - BaseExp: 0, JobExp: 0  (script da EXP custom via getexp em OnMobDead)
+#   - Sem drops, sem skills (spec oficial: mobs nao usam skills)
+#   - Stats bakeados no db (HP/ATK/DEF/HIT/FLEE/Level por rank)
+#   - Sprite randomizado via setunitdata UMOB_CLASS no script (132 IDs oficiais)
+#
+# Stats por rank (baseado em iRO Wiki + DRO scaling):
+#   Rank 0:  60lv  90k HP   3k ATK    150 DEF  400 HIT  200 FLEE
+#   Rank 1:  80lv 165k HP   8k ATK    250 DEF  550 HIT  350 FLEE
+#   Rank 2: 100lv 325k HP  20k ATK    350 DEF  700 HIT  500 FLEE
+#   Rank 3: 120lv 700k HP  45k ATK    500 DEF  850 HIT  650 FLEE
+#   Rank 4: 140lv 1.8M HP  60k ATK    650 DEF 1000 HIT  800 FLEE
+#   Rank 5: 160lv   8M HP  65k ATK    800 DEF 1150 HIT  950 FLEE
+#   Rank 6: 180lv  32M HP  65k ATK    950 DEF 1300 HIT 1100 FLEE
+#   Rank 7: 200lv 115M HP  65k ATK   1100 DEF 1450 HIT 1250 FLEE
+#   Rank 8: 220lv 167M HP  65k ATK   1250 DEF 1600 HIT 1400 FLEE
+#   Rank 9: 240lv 350M HP  65k ATK   1400 DEF 1750 HIT 1550 FLEE
+#   Rank 10:249lv 700M HP  65k ATK   1550 DEF 1900 HIT 1700 FLEE
+# =============================================================================
+
+Header:
+  Type: MOB_DB
+  Version: 3
+
+Body:
+  - Id: 3960
+    AegisName: ST_VARIANT_R0
+    Name: Basement Floor X Variant
+    Level: 54
+    Hp: 9000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 300
+    Attack2: 450
+    Defense: 150
+    MagicDefense: 100
+    Str: 60
+    Agi: 30
+    Vit: 60
+    Int: 30
+    Dex: 80
+    Luk: 30
+    Hit: 400
+    Flee: 200
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 1
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3961
+    AegisName: ST_VARIANT_R1
+    Name: Basement Floor X Variant
+    Level: 74
+    Hp: 16500
+    BaseExp: 0
+    JobExp: 0
+    Attack: 800
+    Attack2: 1200
+    Defense: 250
+    MagicDefense: 170
+    Str: 80
+    Agi: 40
+    Vit: 80
+    Int: 40
+    Dex: 100
+    Luk: 40
+    Hit: 550
+    Flee: 350
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 1
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3962
+    AegisName: ST_VARIANT_R2
+    Name: Basement Floor X Variant
+    Level: 94
+    Hp: 32500
+    BaseExp: 0
+    JobExp: 0
+    Attack: 2000
+    Attack2: 3000
+    Defense: 350
+    MagicDefense: 230
+    Str: 100
+    Agi: 50
+    Vit: 100
+    Int: 50
+    Dex: 120
+    Luk: 50
+    Hit: 700
+    Flee: 500
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 2
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3963
+    AegisName: ST_VARIANT_R3
+    Name: Basement Floor X Variant
+    Level: 114
+    Hp: 70000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 4500
+    Attack2: 6500
+    Defense: 500
+    MagicDefense: 330
+    Str: 120
+    Agi: 60
+    Vit: 120
+    Int: 60
+    Dex: 140
+    Luk: 60
+    Hit: 850
+    Flee: 650
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 2
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3964
+    AegisName: ST_VARIANT_R4
+    Name: Basement Floor X Variant
+    Level: 134
+    Hp: 187500
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6000
+    Attack2: 6500
+    Defense: 650
+    MagicDefense: 430
+    Str: 140
+    Agi: 70
+    Vit: 140
+    Int: 70
+    Dex: 160
+    Luk: 70
+    Hit: 1000
+    Flee: 800
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 3
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3965
+    AegisName: ST_VARIANT_R5
+    Name: Basement Floor X Variant
+    Level: 154
+    Hp: 800000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 800
+    MagicDefense: 530
+    Str: 200
+    Agi: 80
+    Vit: 200
+    Int: 80
+    Dex: 180
+    Luk: 80
+    Hit: 1150
+    Flee: 950
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 3
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3966
+    AegisName: ST_VARIANT_R6
+    Name: Basement Floor X Variant
+    Level: 174
+    Hp: 3250000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 950
+    MagicDefense: 630
+    Str: 400
+    Agi: 90
+    Vit: 400
+    Int: 90
+    Dex: 200
+    Luk: 90
+    Hit: 1300
+    Flee: 1100
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 4
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3967
+    AegisName: ST_VARIANT_R7
+    Name: Basement Floor X Variant
+    Level: 194
+    Hp: 11500000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 1100
+    MagicDefense: 730
+    Str: 600
+    Agi: 100
+    Vit: 600
+    Int: 100
+    Dex: 220
+    Luk: 100
+    Hit: 1450
+    Flee: 1250
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 4
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3968
+    AegisName: ST_VARIANT_R8
+    Name: Basement Floor X Variant
+    Level: 214
+    Hp: 16750000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 1250
+    MagicDefense: 830
+    Str: 800
+    Agi: 110
+    Vit: 800
+    Int: 110
+    Dex: 240
+    Luk: 110
+    Hit: 1600
+    Flee: 1400
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 4
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3969
+    AegisName: ST_VARIANT_R9
+    Name: Basement Floor X Variant
+    Level: 234
+    Hp: 35000000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 1400
+    MagicDefense: 930
+    Str: 1000
+    Agi: 120
+    Vit: 1000
+    Int: 120
+    Dex: 260
+    Luk: 120
+    Hit: 1750
+    Flee: 1550
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 4
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true
+
+  - Id: 3970
+    AegisName: ST_VARIANT_R10
+    Name: Basement Floor X Variant
+    Level: 254
+    Hp: 70000000
+    BaseExp: 0
+    JobExp: 0
+    Attack: 6500
+    Attack2: 6500
+    Defense: 1550
+    MagicDefense: 1030
+    Str: 1500
+    Agi: 130
+    Vit: 1500
+    Int: 130
+    Dex: 280
+    Luk: 130
+    Hit: 1900
+    Flee: 1700
+    AttackRange: 1
+    SkillRange: 10
+    ChaseRange: 12
+    Size: Medium
+    Race: Formless
+    Element: Neutral
+    ElementLevel: 4
+    WalkSpeed: 200
+    AttackDelay: 1500
+    AttackMotion: 600
+    DamageMotion: 480
+    Ai: 04
+    Modes:
+      CanMove: true
+      Detector: true

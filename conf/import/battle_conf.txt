@@ -46,14 +46,11 @@ item_rate_equip_boss: 1000
 item_rate_equip_mvp: 1500
 
 // === Cards ===
-// FIXO em 1% pra TODAS cartas (regular/boss/MVP) via min=max=100.
-// Multipliers nao importam mais — clamp force 1% pra cima e pra baixo.
-// Diferenciacao por carta especifica deve ser feita per-mob ou per-item.
-item_rate_card: 100
-item_rate_card_boss: 100
-item_rate_card_mvp: 100
-item_drop_card_min: 100
-item_drop_card_max: 100
+item_rate_card: 10000        // multiplier 100x regular (garante clamp ao ceiling 1%)
+item_rate_card_boss: 100    // multiplier 1x mini
+item_rate_card_mvp: 100     // multiplier 1x MVP
+item_drop_card_min: 10     // 1% floor para TODOS cards
+item_drop_card_max: 100     // 1% ceiling para TODOS cards
 
 // === MVP-specific drops (Old Card Album, Old Violet Box, etc) ===
 item_rate_mvp: 300

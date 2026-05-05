@@ -45,3 +45,316 @@
 Header:
   Type: BARTER_DB
   Version: 2
+
+Body:
+###########################################################################
+##= Centro — Booster Coin Exchange (Prontera 166, 300)
+##= Source: divine-pride.net/database/item/1000254 + hazyforest.com/events:booster
+##= Aceita Booster_Coin (1000254) e Booster_W_Ticket (1000253)
+###########################################################################
+  - Name: Centro#booster
+    Map: prontera
+    X: 166
+    Y: 300
+    Direction: South
+    Sprite: 4_F_TELEPORTER
+    Items:
+      # ----- Booster Coin (1000254) -----
+      - Index: 0
+        Item: Metal_W_Ticket             # Metal Weapon Exchange Ticket (25820)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 1
+      - Index: 1
+        Item: Metal_7_Ticket             # Metal Weapon +7 Refinement Ticket (100125)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 5
+      - Index: 2
+        Item: Boost_A_Ticket             # Booster Armor Voucher (1000006)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 20
+      - Index: 3
+        Item: Booster_W_Ticket           # Booster Weapon Voucher (1000253)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 20
+      - Index: 4
+        Item: Boost_Up_1                 # Booster Armor UpgradeBox (100043)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 20
+      - Index: 5
+        Item: Boost_Up_2                 # Booster Weapon UpgradeBox (100044)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 20
+      - Index: 6
+        Item: Booster_Mask_A             # Booster Mask A-type [1] (410018)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 500
+      - Index: 7
+        Item: Booster_Mask_B             # Booster Mask B-type [1] (410019)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 500
+      - Index: 8
+        Item: Booster_Mask_C             # Booster Mask C-type [1] (410020)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 500
+      - Index: 9
+        Item: Almighty                   # All-In-One Buff Potion (12883)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 20
+      - Index: 10
+        Item: World_Tour_Ticket          # World Moving Ticket (25464)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 1
+      - Index: 11
+        Item: Booster_RandomOpt_P        # Booster Modification Stone Physical (100722)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 5
+      - Index: 12
+        Item: Booster_RandomOpt_M        # Booster Modification Stone Magical (100723)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_Coin
+            Amount: 5
+      # ----- Booster Weapon Voucher (1000253) -> 18 armas -----
+      - Index: 13
+        Item: IW_B_T_Sword               # Ignition Wave Booster Two-handed Sword (600012)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 14
+        Item: HB_B_T_Spear               # Hundred Breath Booster Spear (630008)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 15
+        Item: BC_B_Spear                 # Vanishing Cannon Booster Spear (530005)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 16
+        Item: PG_B_Sword                 # Pressure Genesis Booster Sword (500015)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 17
+        Item: PT_B_Axe                   # Power Swing Booster Axe (620003)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 18
+        Item: HS_T_Sword                 # Hell Tornado Booster Sword (500016)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 19
+        Item: RC_B_Katar                 # Rolling Cross Booster Katar (610013)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 20
+        Item: CA_B_Dagger                # Counter Assault Booster Dagger (510017)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 21
+        Item: CS_B_Staff                 # Crimson Strain Booster Staff (640009)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 22
+        Item: CJ_B_Staff                 # Chain Jack Booster Staff (640010)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 23
+        Item: ES_B_Stick                 # Element Spec Booster Stick (550010)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 24
+        Item: AN_B_Wand                  # Adonis Booster Wand (550011)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 25
+        Item: AS_B_Bow                   # Arrow Booster Bow (700015)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 26
+        Item: SB_B_Bow                   # Sharpbolt Booster Bow (700016)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 27
+        Item: MV_B_Violin                # Metallic Vibration Booster Violin (570010)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 28
+        Item: MV_B_Whip                  # Metallic Vibration Booster Whip (580010)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 29
+        Item: CP_B_Knuckle               # Sky Cannon Booster Knuckle (560007)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+      - Index: 30
+        Item: AC_B_Club                  # Acid Cannon Booster Club (590009)
+        RequiredItems:
+          - Index: 0
+            Item: Booster_W_Ticket
+            Amount: 1
+
+###########################################################################
+##= Guarani — Booster Armor / Metal Weapon Exchange (Prontera 148, 282)
+##= Source: divine-pride.net/database/item/1000006 + .../25820
+##= Aceita Boost_A_Ticket (4 armor crates) e Metal_W_Ticket (12 armas Metal)
+###########################################################################
+  - Name: Guarani#booster
+    Map: prontera
+    X: 148
+    Y: 282
+    Direction: South
+    Sprite: 4_M_DST_MASTER
+    Items:
+      # ----- Booster Armor Voucher (1000006) -> 4 crates -----
+      - Index: 0
+        Item: Boost_Atk_Box              # Attacker Booster Armor Crate (100046)
+        RequiredItems:
+          - Index: 0
+            Item: Boost_A_Ticket
+            Amount: 1
+      - Index: 1
+        Item: Boost_Ran_Box              # Ranged Booster Crate (100047)
+        RequiredItems:
+          - Index: 0
+            Item: Boost_A_Ticket
+            Amount: 1
+      - Index: 2
+        Item: Boost_Ele_Box              # Elemental Booster Crate (100048)
+        RequiredItems:
+          - Index: 0
+            Item: Boost_A_Ticket
+            Amount: 1
+      - Index: 3
+        Item: Boost_Defn_Box             # Defiant Booster Crate (100049)
+        RequiredItems:
+          - Index: 0
+            Item: Boost_A_Ticket
+            Amount: 1
+      # ----- Metal Weapon Ticket (25820) -> 12 armas Metal -----
+      - Index: 4
+        Item: Metal_Two_Hand_Sword       # 21005
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 5
+        Item: Metal_Lance                # 1493
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 6
+        Item: Metal_Mace                 # 16023
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 7
+        Item: Metal_Two_Handed_Axe       # 1398
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 8
+        Item: Metal_Dagger               # 13079
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 9
+        Item: Metal_Book                 # 1588
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 10
+        Item: Metal_Staff                # 2018
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 11
+        Item: Metal_Katar                # 1296
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 12
+        Item: Metal_Bow                  # 18116
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 13
+        Item: Metal_Revolver             # 13125
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 14
+        Item: Metal_Huuma_Shuriken       # 13322
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1
+      - Index: 15
+        Item: Metal_Foxtail              # 26111
+        RequiredItems:
+          - Index: 0
+            Item: Metal_W_Ticket
+            Amount: 1

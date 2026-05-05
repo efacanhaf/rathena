@@ -1,0 +1,520 @@
+//===== DimensionsRO ==========================================
+//= Sunken Tower instance (kRO Ep.18, instance Id 61)
+//===== Description: =========================================
+//= Implementacao baseada na spec oficial iRO Wiki:
+//= https://irowiki.org/wiki/Sunken_Tower
+//=
+//= Mecanica oficial:
+//=   - Leticia em alberta (214, 74) — entrada
+//=   - Party leader, BaseLevel 40-175 (DimensionsRO max lvl)
+//=   - Tower Rank 0-10 baseado em BaseLevel do leader (buckets ~12 lvls compactados em 40-175)
+//=   - Tower Difficulty 1-5 (default 1, upgrade custa 10 Meteorite Dust)
+//=   - Instance map 1@ch_u, 30 min timer
+//=   - Floors infinitos, mobs random race/size/element
+//=   - Sem boss, sem skills dos mobs, sem item drops
+//=   - Dimensional Device em cada floor permite avancar
+//=   - A cada 5 floors: bonus EXP + chance de 1 Meteorite Dust
+//=   - Morte de qualquer party member bloqueia progressao
+//=   - Todos members no mesmo map online pra avancar
+//=   - Apenas Butterfly Wing ou morte saem da instance
+//=
+//= EXP rewards: tabela oficial nao documentada no wiki (??).
+//= Usado scaling formula simples ate ter dados reais.
+//============================================================
+
+// ============================================================
+// Leticia — entrada em Alberta
+// ============================================================
+alberta,214,74,4	script	Leticia#st	4_4JOB_LETICIA,{
+	mes "[Leticia]";
+	mes "Bem-vindo a Sunken Tower.";
+	mes "Aqui o lider da party pode criar a instance,";
+	mes "definir dificuldade e iniciar.";
+	next;
+
+	if (BaseLevel < 40) {
+		mes "[Leticia]";
+		mes "Voce precisa ser BaseLevel 40+.";
+		close;
+	}
+	if (getcharid(1) == 0) {
+		mes "[Leticia]";
+		mes "Voce precisa estar em uma party.";
+		close;
+	}
+
+	.@option = select(
+		"Criar instance:" +
+		"Entrar (instance ja existe):" +
+		"Definir dificuldade:" +
+		"^FF0000[GM] Reset (destroy + recreate + enter)^000000:" +
+		"Sair"
+	);
+
+	switch(.@option) {
+		case 1:
+			if (!is_party_leader()) {
+				mes "[Leticia]";
+				mes "Apenas o lider da party pode criar.";
+				close;
+			}
+			// Cooldown 3 dias (259200s) — per-character.
+			if (#SunkenTower_LastRun + 259200 > gettimetick(2)) {
+				.@rem = (#SunkenTower_LastRun + 259200) - gettimetick(2);
+				.@h = .@rem / 3600;
+				mes "[Leticia]";
+				mes "Cooldown ativo. Volte em ~" + .@h + " horas.";
+				close;
+			}
+			.@rank = callfunc("sunken_tower_rank", BaseLevel);
+			if (.@rank < 0) {
+				mes "[Leticia]";
+				mes "Seu nivel esta fora da faixa permitida (40-175).";
+				close;
+			}
+			SunkenTower_Rank = .@rank;
+			if (SunkenTower_Difficulty < 1 || SunkenTower_Difficulty > 5)
+				SunkenTower_Difficulty = 1;
+			// Passa rank/diff via globals temp — OnInstanceInit le ANTES
+			// que sejam zerados (acessivel de qualquer scope)
+			$@ST_pending_rank = .@rank;
+			$@ST_pending_diff = SunkenTower_Difficulty;
+			.@ins = instance_create("Sunken Tower");
+			if (.@ins < 0) {
+				mes "[Leticia]";
+				mes "Falha ao criar instance.";
+				close;
+			}
+			mes "[Leticia]";
+			mes "Instance criada. Rank: " + .@rank + ".";
+			mes "Dificuldade: " + SunkenTower_Difficulty + ".";
+			mes "Quando estiver pronto, clique 'Entrar'.";
+			close;
+
+		case 2:
+			if (instance_enter("Sunken Tower") != IE_OK) {
+				mes "[Leticia]";
+				mes "Nao ha instance ativa pra essa party.";
+				close;
+			}
+			end;
+
+		case 3:
+			if (!is_party_leader()) {
+				mes "[Leticia]";
+				mes "Apenas o lider pode mudar a dificuldade.";
+				close;
+			}
+			.@cur = SunkenTower_Difficulty;
+			if (.@cur < 1) .@cur = 1;
+			mes "[Leticia]";
+			mes "Dificuldade atual: " + .@cur + ".";
+			mes "Dificuldade 1 e sem custo. 2-5 custam 10 Meteorite Dust por nivel.";
+			mes "Maior dificuldade = mais EXP, mas mobs mais fortes.";
+			next;
+			.@new = select("1:2:3:4:5");
+			// Diff 1 sempre gratis (reset)
+			if (.@new == 1) {
+				SunkenTower_Difficulty = 1;
+				mes "[Leticia]";
+				mes "Dificuldade resetada pra 1 (sem custo).";
+				close;
+			}
+			if (.@new <= .@cur) {
+				mes "[Leticia]";
+				mes "So da pra aumentar a dificuldade, nao reduzir.";
+				close;
+			}
+			.@cost = (.@new - .@cur) * 10;
+			if (countitem(1000372) < .@cost) {
+				mes "[Leticia]";
+				mes "Voce precisa de " + .@cost + " Meteorite Dust.";
+				close;
+			}
+			delitem 1000372, .@cost;
+			SunkenTower_Difficulty = .@new;
+			mes "[Leticia]";
+			mes "Dificuldade ajustada pra " + .@new + ".";
+			close;
+
+		case 4:
+			// GM Reset — destrói instance atual, recria, entra (atalho de teste)
+			if (getgroupid() < 99) {
+				mes "[Leticia]";
+				mes "Apenas GMs.";
+				close;
+			}
+			.@old = instance_id(IM_PARTY);
+			if (.@old > 0) instance_destroy(.@old);
+			.@rank = callfunc("sunken_tower_rank", BaseLevel);
+			if (.@rank < 0) .@rank = 0;
+			SunkenTower_Rank = .@rank;
+			if (SunkenTower_Difficulty < 1 || SunkenTower_Difficulty > 5)
+				SunkenTower_Difficulty = 1;
+			$@ST_pending_rank = .@rank;
+			$@ST_pending_diff = SunkenTower_Difficulty;
+			.@ins = instance_create("Sunken Tower");
+			if (.@ins < 0) {
+				mes "[Leticia]";
+				mes "Falha ao criar instance.";
+				close;
+			}
+			instance_enter("Sunken Tower");
+			end;
+
+		case 5:
+			close;
+	}
+}
+
+// ============================================================
+// Helper function — Tower Rank from BaseLevel
+// DimensionsRO: max BaseLevel = 175. 11 ranks (0-10) compactados
+// em buckets de ~12 lvls pra cobrir 40-175.
+// ============================================================
+// Tabela oficial iRO Wiki/Sunken_Tower
+// Em DRO (cap lvl 175) ranks 7-10 sao inalcancaveis mas mantidos pra futura expansao.
+function	script	sunken_tower_rank	{
+	.@lvl = getarg(0);
+	if (.@lvl <  40) return -1;
+	if (.@lvl <  60) return 0;   //  40 -  59
+	if (.@lvl <  80) return 1;   //  60 -  79
+	if (.@lvl < 100) return 2;   //  80 -  99
+	if (.@lvl < 120) return 3;   // 100 - 119
+	if (.@lvl < 140) return 4;   // 120 - 139
+	if (.@lvl < 160) return 5;   // 140 - 159
+	if (.@lvl < 180) return 6;   // 160 - 179
+	if (.@lvl < 200) return 7;   // 180 - 199
+	if (.@lvl < 220) return 8;   // 200 - 219
+	if (.@lvl < 240) return 9;   // 220 - 239
+	if (.@lvl <= 249) return 10; // 240 - 249
+	return -1;
+}
+
+// ============================================================
+// Floor controller (instance-scoped variables: 'st_*)
+// ============================================================
+1@ch_u,13,59,0	script	#st_ctrl	-1,{
+	end;
+
+OnInstanceInit:
+	'st_floor = 0;
+	// Le rank/diff dos globals setados por Leticia ANTES de instance_create
+	'st_rank = $@ST_pending_rank;
+	'st_difficulty = $@ST_pending_diff;
+	if ('st_rank < 0)  'st_rank = 0;
+	if ('st_rank > 10) 'st_rank = 10;
+	if ('st_difficulty < 1) 'st_difficulty = 1;
+	if ('st_difficulty > 5) 'st_difficulty = 5;
+	$@ST_pending_rank = 0;
+	$@ST_pending_diff = 0;
+	setmapflag instance_mapname("1@ch_u"), MF_LOADEVENT;
+	initnpctimer;
+	// Dispara OnNextFloor agora — 'st_rank ja foi lido dos globals
+	donpcevent instance_npcname("#st_ctrl") + "::OnNextFloor";
+	end;
+
+OnPCLoadMapEvent:
+	// Atualiza rank/diff (caso MF_LOADEVENT funcione)
+	if (SunkenTower_Rank > 'st_rank)         'st_rank = SunkenTower_Rank;
+	if (SunkenTower_Difficulty > 'st_difficulty) 'st_difficulty = SunkenTower_Difficulty;
+	if ('st_difficulty > 5) 'st_difficulty = 5;
+	if ('st_rank > 10) 'st_rank = 10;
+	if ('st_floor == 0) {
+		donpcevent instance_npcname("#st_ctrl") + "::OnNextFloor";
+	}
+	end;
+
+OnTimer1500000:  // 25 min — announce 5 min remaining
+	mapannounce instance_mapname("1@ch_u"), "Sunken Tower: 5 minutos restantes.", bc_map;
+	end;
+
+OnTimer1740000:  // 29 min — announce 1 min remaining
+	mapannounce instance_mapname("1@ch_u"), "Sunken Tower: 1 minuto restante.", bc_map;
+	end;
+
+OnTimer1800000:  // 30 min
+	mapannounce instance_mapname("1@ch_u"), "Tempo esgotado. Voce sera enviado de volta.", bc_map;
+
+	// === DRO custom reward: Booster Coin ao completar instancia ===
+	// Formula: max(rank, 1) * difficulty coins por player na map
+	.@coins_base = 'st_rank;
+	if (.@coins_base < 1) .@coins_base = 1;
+	.@coins = .@coins_base * 'st_difficulty;
+	if (.@coins < 1) .@coins = 1;
+	mapannounce instance_mapname("1@ch_u"),
+		"Booster Coin reward: " + .@coins + " por membro.", bc_map;
+
+	.@n = getmapunits(BL_PC, instance_mapname("1@ch_u"), .@aid);
+	for (.@i = 0; .@i < .@n; .@i++) {
+		if (attachrid(.@aid[.@i])) {
+			getitem 1000254, .@coins;  // Booster_Coin
+			detachrid;
+		}
+	}
+
+	sleep 5000;
+	instance_warpall "alberta", 214, 74, getcharid(1);
+	instance_destroy(getcharid(1));
+	end;
+
+OnNextFloor:
+	'st_floor++;
+	'st_floor_clear = 0;
+
+	// CRITICO: limpa residuos pra mobcount(map, label) refletir apenas
+	// os mobs spawnados deste floor (padrao EndlessTower).
+	killmonster instance_mapname("1@ch_u"), instance_npcname("#st_ctrl") + "::OnMobDead";
+
+	mapannounce instance_mapname("1@ch_u"),
+		"Sunken Tower: Floor " + 'st_floor + " iniciado.",
+		bc_map, "0xffff00";
+
+	// Spawn count fixo por floor/zone (cicla 1-5):
+	//   floor 1=25, 2=30, 3=35, 4=40, 5=50 (e repete: 6=25, 7=30, ...)
+	setarray .@count_table[0], 25, 30, 35, 40, 50;
+
+	// Mob template: 3960 (ST_VARIANT) — BaseExp/JobExp = 0, no drops, no skills.
+	// Sprite randomizado via UMOB_CLASS a partir dos 132 IDs oficiais
+	// documentados em iRO Wiki/Sunken_Tower. Race/Size/Element idem.
+	setarray .@sprite_pool[0],
+		1013, 1016, 1023, 1026, 1029, 1032, 1034, 1035, 1036, 1037,
+		1040, 1041, 1042, 1044, 1045, 1058, 1060, 1061, 1064, 1065,
+		1066, 1067, 1069, 1070, 1071, 1073, 1074, 1099, 1100, 1101,
+		1104, 1108, 1110, 1111, 1114, 1116, 1119, 1121, 1122, 1123,
+		1124, 1125, 1126, 1127, 1129, 1130, 1138, 1139, 1140, 1141,
+		1144, 1146, 1149, 1151, 1152, 1153, 1154, 1156, 1158, 1164,
+		1165, 1166, 1169, 1170, 1177, 1178, 1179, 1180, 1186, 1188,
+		1189, 1191, 1192, 1195, 1211, 1212, 1214, 1243, 1244, 1248,
+		1250, 1254, 1258, 1260, 1261, 1264, 1266, 1271, 1273, 1274,
+		1277, 1278, 1279, 1280, 1281, 1308, 1313, 1317, 1322, 1323,
+		1369, 1380, 1381, 1391, 1392, 1400, 1409, 1415, 1493, 1494,
+		1495, 1497, 1498, 1499, 1500, 1584, 1586, 1587, 1629, 1664,
+		1665, 1666, 1667, 1686, 1687, 1777, 1836, 2069, 2070, 2072,
+		2073, 2074;
+	.@sprite_count = getarraysize(.@sprite_pool);
+
+	// Stats (HP/ATK/DEF/HIT/FLEE/Level) bakeados em mob_db (3960-3970 por rank).
+	// Apenas EXP custom continua sendo calculada via tabela aqui.
+	setarray .@mob_exp_d1[0], 300, 500, 1200, 2500, 7000, 25000, 80000, 180000, 274092, 480000, 525000;
+	.@diff = 'st_difficulty;
+	if (.@diff < 1) .@diff = 1;
+	.@exp_mult = 100 + (.@diff - 1) * 20;
+	.@mob_exp = .@mob_exp_d1['st_rank] * .@exp_mult / 100;
+	.@mob_jobexp = .@mob_exp * 80 / 100;
+
+	.@map$ = instance_mapname("1@ch_u");
+	.@event$ = instance_npcname("#st_ctrl") + "::OnMobDead";
+
+	// 1@ch_u tem 5 zonas walkable. Cicla (floor-1) % 5 (estilo EndlessTower).
+	// Cada zona ~50x50 cells. Spawn area conservadora (margem 3 das bordas).
+	setarray .@zone_x1[0],   4,  88, 176, 262, 346;
+	setarray .@zone_x2[0],  51, 135, 223, 309, 393;
+	setarray .@zone_y1[0],  14,  14,  14,  14,  14;
+	setarray .@zone_y2[0],  63,  63,  63,  63,  63;
+	setarray .@zone_cx[0],  27, 111, 199, 285, 369;
+	setarray .@zone_cy[0],  44,  44,  44,  44,  44;
+	.@z = ('st_floor - 1) % 5;
+	if (.@z < 0) .@z = 0;
+	.@count = .@count_table[.@z];
+
+	// Mob ID por rank: 3960 (rank 0) ate 3970 (rank 10)
+	.@mob_id = 3960 + 'st_rank;
+	areamonster .@map$, .@zone_x1[.@z], .@zone_y1[.@z], .@zone_x2[.@z], .@zone_y2[.@z],
+		"Basement Floor " + 'st_floor + " Variant",
+		.@mob_id, .@count, .@event$;
+
+	// Apos killmonster + areamonster, todos os mobs com esse event label
+	// sao os do floor atual. mobcount via getmapunits para iterar.
+	.@n = getmapunits(BL_MOB, .@map$, .@gids[0]);
+
+	// Todos os devices ficam disabled durante o combate. So aparecem
+	// quando o floor for limpo (em OnMobDead -> mobcount < 1).
+	disablenpc instance_npcname("Dimensional Device#st1");
+	disablenpc instance_npcname("Dimensional Device#st2");
+	disablenpc instance_npcname("Dimensional Device#st3");
+	disablenpc instance_npcname("Dimensional Device#st4");
+	disablenpc instance_npcname("Dimensional Device#st5");
+
+	// Warp todos os players pro centro da zona deste floor
+	.@np = getmapunits(BL_PC, .@map$, .@aid_p);
+	for (.@p = 0; .@p < .@np; .@p++) {
+		if (attachrid(.@aid_p[.@p])) {
+			warp .@map$, .@zone_cx[.@z], .@zone_cy[.@z];
+			detachrid;
+		}
+	}
+	for (.@j = 0; .@j < .@n; .@j++) {
+		.@gid = .@gids[.@j];
+		// Stats vem do mob_db (rank-specific). Apenas randomiza sprite.
+		// UMOB_CLASS e visual-only (status_set_viewdata), nao depende de
+		// base_status — funciona mesmo com mobs_level_up: no.
+		setunitdata .@gid, UMOB_CLASS, .@sprite_pool[rand(.@sprite_count)];
+	}
+
+	// Per-mob EXP da tabela oficial e dado via OnMobDead handler abaixo
+	'st_mob_exp = .@mob_exp_d1['st_rank] * (100 + ('st_difficulty - 1) * 20) / 100;
+	'st_mob_jobexp = 'st_mob_exp * 80 / 100;
+	// (mobcount via OnMobDead substitui contador manual — padrao EndlessTower)
+	end;
+
+OnMobDead:
+	// Padrao EndlessTower: mobcount(map, event_label) conta mobs vivos
+	// registrados nesse label. killmonster em OnNextFloor garante que
+	// mobcount reflete apenas mobs do floor atual.
+	.@map$ = instance_mapname("1@ch_u");
+	.@evt$ = instance_npcname("#st_ctrl") + "::OnMobDead";
+	.@remaining = mobcount(.@map$, .@evt$);
+
+	// Da EXP custom pra todos os players da map (tabela oficial)
+	.@n = getmapunits(BL_PC, .@map$, .@aid);
+	for (.@i = 0; .@i < .@n; .@i++) {
+		if (attachrid(.@aid[.@i])) {
+			getexp 'st_mob_exp, 'st_mob_jobexp;
+			detachrid;
+		}
+	}
+
+	if (.@remaining < 1) {
+		'st_floor_clear = 1;
+		.@z = ('st_floor - 1) % 5;
+		if (.@z < 0) .@z = 0;
+		enablenpc instance_npcname("Dimensional Device#st" + (.@z + 1));
+		mapannounce .@map$,
+			"Todos os monstros do Floor " + 'st_floor + " foram derrotados.",
+			bc_map, "0xffff00";
+	} else {
+		mapannounce .@map$,
+			"Restantes na Floor " + 'st_floor + ": " + .@remaining,
+			bc_map, "0x00ff99";
+	}
+	end;
+}
+
+// ============================================================
+// Dimensional Device — 5 NPCs (1 por zona). Habilita/desabilita
+// via OnNextFloor. Mais robusto que movenpc (que pode quebrar
+// click handling em algumas versoes do rAthena).
+// Coords dentro de cada zona: zone_cx + 3, zone_cy + 3.
+// Zone 1 (37,47) | 2 (114,47) | 3 (202,47) | 4 (288,47) | 5 (372,47)
+// ============================================================
+1@ch_u,47,24,4	script	Dimensional Device#st1	4_RUNESTONE,{
+	// Device so e visivel quando floor_clear=1 (enabled em OnMobDead).
+	// Sem checagem do flag aqui — chegou a clicar = floor ja limpo.
+
+	// Party check (skipa attach/detach em si mesmo — quebra o RID do script)
+	.@chk_map$ = instance_mapname("1@ch_u");
+	.@party = getcharid(1);
+	getpartymember .@party, 2;
+	.@psize = $@partymembercount;
+	copyarray .@aids[0], $@partymemberaid[0], .@psize;
+	.@self_aid = getcharid(3);
+	.@on_map = 0;
+	.@dead = 0;
+	for (.@i = 0; .@i < .@psize; .@i++) {
+		if (.@aids[.@i] == 0) continue;          // offline
+		if (.@aids[.@i] == .@self_aid) {
+			// Self — ja no mapa (clicou no NPC), so valida HP sem detach
+			if (Hp > 0) .@on_map++; else .@dead++;
+			continue;
+		}
+		if (attachrid(.@aids[.@i])) {
+			if (strcharinfo(3) == .@chk_map$) {
+				if (Hp > 0) .@on_map++; else .@dead++;
+			}
+			detachrid;
+		}
+	}
+	if (.@dead > 0) {
+		mes "[Dimensional Device]";
+		mes "Algum membro esta morto. Revivam antes de avancar.";
+		close;
+	}
+
+	mes "[Dimensional Device]";
+	mes "Floor " + 'st_floor + " limpo.";
+	if ('st_floor % 5 == 0) {
+		mes "Bonus EXP + chance de Meteorite Dust por completar 5 floors.";
+	}
+	mes "Avancar?";
+	next;
+
+	if (select("Sim:Cancelar") == 2) close;
+
+	// === Tabelas oficiais (iRO Wiki) por rank ===
+	// 5th-floor bonus Base EXP (Diff 1) — escala 5x linear ate Diff 5
+	setarray .@bonus_d1[0],
+		15120, 22320, 48600, 93600, 243000, 810000,
+		2070000, 4320000, 7380000, 9000000, 10800000;
+	// Per-mob Base EXP (Diff 1). Ranks 0-7 sao estimativas
+	// (wiki nao documenta), 8-10 sao oficiais.
+	setarray .@mob_exp_d1[0],
+		300, 500, 1200, 2500, 7000, 25000, 80000, 180000,
+		274092, 480000, 525000;
+	// Meteorite Dust chance % por rank em Diff 1 (escala ate Diff 5)
+	setarray .@dust_d1[0],  0,  0,  0,  0,  0,  0,  0,  0,  0, 60, 80;
+	setarray .@dust_d5[0],  0,  0,  0,  0,  0,  0,  0,  0, 30, 60, 80;
+
+	.@diff = 'st_difficulty;
+	if (.@diff < 1) .@diff = 1;
+	// 5th-floor bonus EXP escala linear D1→D5 = 1x→5x
+	.@bonus_mult = 100 + (.@diff - 1) * 100;
+	// Per-mob EXP escala D1→D5 ≈ 1x→1.8x (observado nos ranks 9-10)
+	.@mob_exp_mult = 100 + (.@diff - 1) * 20;
+	// Dust chance interpola D1→D5
+	.@dust_chance = .@dust_d1['st_rank] + (.@dust_d5['st_rank] - .@dust_d1['st_rank]) * (.@diff - 1) / 4;
+	// Quantity: rank 10 + diff 5 = 3, resto = 1
+	.@dust_qty = ('st_rank == 10 && .@diff == 5) ? 3 : 1;
+
+	// EXP por mob morto JA é dado via getexp na hora da morte (nao via Device).
+	// Aqui o Device da APENAS o bonus de 5o floor pra todos os players da map.
+	if ('st_floor % 5 == 0) {
+		.@bonus_b = .@bonus_d1['st_rank] * .@bonus_mult / 100;
+		.@bonus_j = .@bonus_b * 80 / 100;  // Job = 80% Base
+		.@dust_floor = 1;
+		// DRO custom: Booster Coins por 5th floor (max(rank,1) * diff)
+		.@coins_base = 'st_rank;
+		if (.@coins_base < 1) .@coins_base = 1;
+		.@coins = .@coins_base * 'st_difficulty;
+		.@self = getcharid(3);
+		.@count_pc = getmapunits(BL_PC, instance_mapname("1@ch_u"), .@aid_b);
+		for (.@i = 0; .@i < .@count_pc; .@i++) {
+			if (.@aid_b[.@i] == .@self) {
+				getexp .@bonus_b, .@bonus_j;
+				getitem 1000372, .@dust_floor;
+				if (rand(100) < .@dust_chance) getitem 1000372, .@dust_qty;
+				getitem 1000254, .@coins;
+				continue;
+			}
+			if (attachrid(.@aid_b[.@i])) {
+				getexp .@bonus_b, .@bonus_j;
+				getitem 1000372, .@dust_floor;
+				if (rand(100) < .@dust_chance) getitem 1000372, .@dust_qty;
+				getitem 1000254, .@coins;
+				detachrid;
+			}
+		}
+		mapannounce instance_mapname("1@ch_u"),
+			"5th floor bonus: +" + .@bonus_b + " EXP, " + .@dust_floor + " Meteorite Dust, " + .@coins + " Booster Coin(s) por membro.",
+			bc_map;
+	}
+
+	'st_floor_clear = 0;
+	// Dispatcha pro #st_ctrl da MESMA instance (nao deste NPC)
+	donpcevent instance_npcname("#st_ctrl") + "::OnNextFloor";
+	close;
+
+OnInstanceInit:
+	disablenpc strnpcinfo(0);
+	end;
+}
+
+// Duplicates pra zones 2-5 (compartilham logica via duplicate())
+// Coords = X1 da zona + 43 (mesma posicao relativa que zone 1)
+1@ch_u,131,24,4	duplicate(Dimensional Device#st1)	Dimensional Device#st2	4_RUNESTONE
+1@ch_u,219,24,4	duplicate(Dimensional Device#st1)	Dimensional Device#st3	4_RUNESTONE
+1@ch_u,305,24,4	duplicate(Dimensional Device#st1)	Dimensional Device#st4	4_RUNESTONE
+1@ch_u,389,24,4	duplicate(Dimensional Device#st1)	Dimensional Device#st5	4_RUNESTONE
+
+// Suppress mapflag warnings — the official mapflags are already in
+// npc/re/mapflag/ (restricted, partylock, etc.), no override needed here.
