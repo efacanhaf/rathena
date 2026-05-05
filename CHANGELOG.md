@@ -8,6 +8,21 @@ Format inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.0.0] — 2026-04-30 (atualizado 2026-05-05)
 
+### Drop & EXP rate balance — wave 2 (2026-05-05 noite)
+
+- **Common/Heal/Use**: 5x/5x/10x → **15x/15x/20x** (normal/mini/mvp).
+- **Equip**: 5x/10x/15x → **20x/15x/10x** (invertido — mais drop em normal,
+  menos em mvp). Justificativa: end-game equip era trivial em mvp; gear
+  baseline (normal mobs) precisava de mais frequência.
+- **`atcommand_mobinfo_type: 0`**: `@mi`/`@whodrops` agora mostram rate
+  base do mob (sem `pc_level_penalty_mod` aplicado no display). Drop real
+  continua afetado pelo level penalty Renewal — só o display que era
+  confuso (mostrava rate efetivo pro char, parecia bug).
+- **Cor Core (25723 / EP17_1_EVT39)** com `Ratio: 30000` em
+  `mob_item_ratio.yml` — 300× o rate nativo (clampado em 100% via
+  `item_drop_common_max`). Pra acelerar farm de Cor Core sem mexer no
+  multiplier global.
+
 ### Sunken Tower (Ep.18 instance) — DimensionsRO custom
 
 NPC `Leticia` em `alberta 214,74` cria uma instance no map `1@ch_u`, baseada
